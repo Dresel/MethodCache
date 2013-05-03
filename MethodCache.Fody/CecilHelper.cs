@@ -36,7 +36,7 @@
 		public static Instruction AppendBoxIfNecessary(this Instruction instruction, ILProcessor processor,
 			TypeReference typeReference)
 		{
-			if (typeReference.IsPrimitive || typeReference.Resolve().IsEnum)
+			if (typeReference.IsValueType)
 			{
 				return instruction.Append(processor.Create(OpCodes.Box, typeReference), processor);
 			}
