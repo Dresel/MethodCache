@@ -97,8 +97,9 @@
 			if (!CheckCacheInterfaceMethods())
 				return;
 
-			// Weave methods
 			WeaveMethods();
+
+			RemoveReference();
 		}
 
 		private void WeaveMethods()
@@ -408,7 +409,18 @@
 
 			methodDefinition.Body.OptimizeMacros();
 		}
+		public void RemoveReference()
+		{
+			var referenceToRemove = ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
+			if (referenceToRemove == null)
+			{
+				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
+				return;
+			}
 
+			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
+			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
+		}
 		#endregion
 	}
 }

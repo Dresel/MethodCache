@@ -79,12 +79,24 @@
 
 		public static bool ContainsAttribute(this MethodDefinition methodDefinition, MemberReference attributeType)
 		{
-			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			var attribute = methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			if (attribute != null)
+			{
+				methodDefinition.CustomAttributes.Remove(attribute);
+				return true;
+			}
+			return false;
 		}
 
 		public static bool ContainsAttribute(this TypeDefinition typeDefinition, MemberReference attributeType)
 		{
-			return typeDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			var attribute = typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			if (attribute != null)
+			{
+				typeDefinition.CustomAttributes.Remove(attribute);
+				return true;
+			}
+			return false;
 		}
 
 		public static MethodDefinition GetInheritedPropertyGet(this TypeDefinition baseType, string propertyName)
