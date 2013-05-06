@@ -78,20 +78,6 @@
 			RemoveReference();
 		}
 
-		public void RemoveReference()
-		{
-			AssemblyNameReference referenceToRemove =
-				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
-			if (referenceToRemove == null)
-			{
-				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
-				return;
-			}
-
-			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
-			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
-		}
-
 		#endregion
 
 		#region Methods
@@ -146,6 +132,20 @@
 			LogInfo(string.Format("CacheInterface methods found."));
 
 			return true;
+		}
+
+		private void RemoveReference()
+		{
+			AssemblyNameReference referenceToRemove =
+				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
+			if (referenceToRemove == null)
+			{
+				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
+				return;
+			}
+
+			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
+			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
 		}
 
 		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, string cacheAttributeName)
