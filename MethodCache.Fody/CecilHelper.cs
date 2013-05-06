@@ -1,4 +1,4 @@
-﻿namespace Legendary.Weavers
+﻿namespace MethodCache.Fody
 {
 	using System;
 	using System.Collections.Generic;

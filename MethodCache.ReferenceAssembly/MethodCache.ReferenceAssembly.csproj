@@ -7,8 +7,8 @@
     <ProjectGuid>{1D0AD049-7240-41CD-8B69-7F48AA5FAA6C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MethodCache</RootNamespace>
-    <AssemblyName>MethodCache</AssemblyName>
+    <RootNamespace>MethodCache.ReferenceAssembly</RootNamespace>
+    <AssemblyName>MethodCache.ReferenceAssembly</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Profile1</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\MethodCache.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\MethodCache.ReferenceAssembly.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,13 +31,18 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\MethodCache.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\MethodCache.ReferenceAssembly.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="CacheAttribute.cs" />
+    <Compile Include="Cache\CacheAttribute.cs" />
+    <Compile Include="Cache\DictionaryCache.cs" />
+    <Compile Include="Cache\ICache.cs" />
+    <Compile Include="MethodResult.cs" />
+    <Compile Include="TestClass1.cs" />
+    <Compile Include="TestClass2.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

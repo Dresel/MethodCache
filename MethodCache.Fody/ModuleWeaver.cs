@@ -1,4 +1,4 @@
-﻿namespace Legendary.Weavers
+﻿namespace MethodCache.Fody
 {
 	using System;
 	using System.Collections.Generic;
@@ -47,6 +47,8 @@
 
 		public IAssemblyResolver AssemblyResolver { get; set; }
 
+		public List<string> DefineConstants { get; set; }
+
 		public Action<string> LogError { get; set; }
 
 		public Action<string, SequencePoint> LogErrorPoint { get; set; }
@@ -58,8 +60,6 @@
 		public Action<string, SequencePoint> LogWarningPoint { get; set; }
 
 		public ModuleDefinition ModuleDefinition { get; set; }
-
-		public List<string> DefineConstants { get; set; }
 
 		#endregion
 
@@ -87,57 +87,39 @@
 
 			// Check if CacheAttribute is existing
 			if ((CacheAttribute = FindCacheAttribute(ModuleDefinition, CacheAttributeName)) == null)
+			{
 				return;
+			}
 
 			// Check if CacheInterface is existing
 			if ((CacheInterface = FindCacheInterface(ModuleDefinition, CacheInterfaceName)) == null)
+			{
 				return;
+			}
 
 			// Check if CacheInterface methods are existing
 			if (!CheckCacheInterfaceMethods())
+			{
 				return;
+			}
 
 			WeaveMethods();
 
 			RemoveReference();
 		}
 
-		private void WeaveMethods()
+		public void RemoveReference()
 		{
-			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttribute);
-
-			foreach (MethodDefinition methodDefinition in methodDefinitions)
+			AssemblyNameReference referenceToRemove =
+				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
+			if (referenceToRemove == null)
 			{
-				MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
-				propertyGet = propertyGet ?? methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
-
-				LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
-
-				if (propertyGet == null)
-				{
-					LogWarning(string.Format("Class {0} does not contain or inherit Getter {1}. Skip weaving of method {2}.",
-						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
-
-					continue;
-				}
-
-				if (propertyGet.ReturnType.FullName != CacheInterface.FullName)
-				{
-					LogWarning(string.Format("Getter {0} of Class {1} is not of type {2}. Skip weaving of method {3}.", CacheGetterName,
-						methodDefinition.DeclaringType.Name, CacheInterface.Name, methodDefinition.Name));
-
-					continue;
-				}
-
-				if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
-				{
-					LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
-
-					continue;
-				}
-
-				WeaveMethod(methodDefinition);
+				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
+				return;
 			}
+
+			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
+			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
 		}
 
 		#endregion
@@ -156,7 +138,8 @@
 			string cacheInterfaceRetrieveMethodName)
 		{
 			return
-				(cacheInterface.GetMethod(cacheInterfaceRetrieveMethodName, new GenericParameter("T", cacheInterface), new[] { cacheInterface.Module.ImportType<string>() }));
+				(cacheInterface.GetMethod(cacheInterfaceRetrieveMethodName, new GenericParameter("T", cacheInterface),
+					new[] { cacheInterface.Module.ImportType<string>() }));
 		}
 
 		private MethodDefinition CacheInterfaceGetStoreMethod(TypeDefinition cacheInterface,
@@ -172,26 +155,27 @@
 			LogInfo(string.Format("Checking CacheInterface methods ({0}, {1}, {2}).", CacheInterfaceContainsMethodName,
 				CacheInterfaceStoreMethodName, CacheInterfaceRetrieveMethodName));
 
-			if ((CacheInterfaceContainsMethod = CacheInterfaceGetContainsMethod(CacheInterface, CacheInterfaceContainsMethodName)) == null)
+			if (
+				(CacheInterfaceContainsMethod = CacheInterfaceGetContainsMethod(CacheInterface, CacheInterfaceContainsMethodName)) ==
+					null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceContainsMethodName,
-					CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceContainsMethodName, CacheInterface.FullName));
 
 				return false;
 			}
 
 			if ((CacheInterfaceStoreMethod = CacheInterfaceGetStoreMethod(CacheInterface, CacheInterfaceStoreMethodName)) == null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceStoreMethodName,
-					CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceStoreMethodName, CacheInterface.FullName));
 
 				return false;
 			}
 
-			if ((CacheInterfaceRetrieveMethod = CacheInterfaceGetRetrieveMethod(CacheInterface, CacheInterfaceRetrieveMethodName)) == null)
+			if (
+				(CacheInterfaceRetrieveMethod = CacheInterfaceGetRetrieveMethod(CacheInterface, CacheInterfaceRetrieveMethodName)) ==
+					null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceRetrieveMethodName,
-					CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceRetrieveMethodName, CacheInterface.FullName));
 
 				return false;
 			}
@@ -232,8 +216,8 @@
 				}
 			}
 
-			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.",
-				cacheAttributeName, moduleDefinition.Name));
+			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.", cacheAttributeName,
+				moduleDefinition.Name));
 
 			return null;
 		}
@@ -270,8 +254,8 @@
 				}
 			}
 
-			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.",
-				cacheInterfaceName, moduleDefinition.Name));
+			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.", cacheInterfaceName,
+				moduleDefinition.Name));
 
 			return null;
 		}
@@ -282,10 +266,15 @@
 
 			HashSet<MethodDefinition> definitions = new HashSet<MethodDefinition>();
 
-			definitions.UnionWith(moduleDefinition.Types.SelectMany(x => x.Methods.Where(y => y.ContainsAttribute(cacheAttribute))));
 			definitions.UnionWith(
-				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttribute)).SelectMany(x => x.Methods)
-					.Where(x => !x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor && !x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>())));
+				moduleDefinition.Types.SelectMany(x => x.Methods.Where(y => y.ContainsAttribute(cacheAttribute))));
+			definitions.UnionWith(
+				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttribute))
+				                .SelectMany(x => x.Methods)
+				                .Where(
+					                x =>
+						                !x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor &&
+							                !x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>())));
 
 			return definitions;
 		}
@@ -409,18 +398,46 @@
 
 			methodDefinition.Body.OptimizeMacros();
 		}
-		public void RemoveReference()
-		{
-			var referenceToRemove = ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
-			if (referenceToRemove == null)
-			{
-				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
-				return;
-			}
 
-			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
-			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
+		private void WeaveMethods()
+		{
+			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttribute);
+
+			foreach (MethodDefinition methodDefinition in methodDefinitions)
+			{
+				MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
+				propertyGet = propertyGet ??
+					methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+
+				LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
+
+				if (propertyGet == null)
+				{
+					LogWarning(string.Format("Class {0} does not contain or inherit Getter {1}. Skip weaving of method {2}.",
+						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+
+					continue;
+				}
+
+				if (propertyGet.ReturnType.FullName != CacheInterface.FullName)
+				{
+					LogWarning(string.Format("Getter {0} of Class {1} is not of type {2}. Skip weaving of method {3}.", CacheGetterName,
+						methodDefinition.DeclaringType.Name, CacheInterface.Name, methodDefinition.Name));
+
+					continue;
+				}
+
+				if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
+				{
+					LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
+
+					continue;
+				}
+
+				WeaveMethod(methodDefinition);
+			}
 		}
+
 		#endregion
 	}
 }
