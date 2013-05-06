@@ -1,6 +1,6 @@
-﻿namespace MethodCache
+﻿namespace MethodCache.ReferenceAssembly
 {
-	using MethodCache.Cache;
+	using MethodCache.ReferenceAssembly.Cache;
 
 	public class TestClass2
 	{

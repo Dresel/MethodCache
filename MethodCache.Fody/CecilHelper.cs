@@ -47,9 +47,10 @@
 		public static Instruction AppendDebugWrite(this Instruction instruction, ILProcessor processor, string message,
 			ModuleDefinition module)
 		{
-			return instruction
-				.AppendLdstr(processor, message).Append(
-					processor.Create(OpCodes.Call, module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })), processor);
+			return
+				instruction.AppendLdstr(processor, message).Append(
+					processor.Create(OpCodes.Call, module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })),
+					processor);
 		}
 
 		public static Instruction AppendLdarg(this Instruction instruction, ILProcessor processor, int index)
@@ -79,23 +80,57 @@
 
 		public static bool ContainsAttribute(this MethodDefinition methodDefinition, MemberReference attributeType)
 		{
-			var attribute = methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			CustomAttribute attribute =
+				methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+
 			if (attribute != null)
 			{
 				methodDefinition.CustomAttributes.Remove(attribute);
 				return true;
 			}
+
+			return false;
+		}
+
+		public static bool ContainsAttribute(this MethodDefinition methodDefinition, string attributeTypeName)
+		{
+			CustomAttribute attribute =
+				methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.Name == attributeTypeName);
+
+			if (attribute != null)
+			{
+				methodDefinition.CustomAttributes.Remove(attribute);
+				return true;
+			}
+
 			return false;
 		}
 
 		public static bool ContainsAttribute(this TypeDefinition typeDefinition, MemberReference attributeType)
 		{
-			var attribute = typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+			CustomAttribute attribute =
+				typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
+
 			if (attribute != null)
 			{
 				typeDefinition.CustomAttributes.Remove(attribute);
 				return true;
 			}
+
+			return false;
+		}
+
+		public static bool ContainsAttribute(this TypeDefinition typeDefinition, string attributeTypeName)
+		{
+			CustomAttribute attribute =
+				typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.Name == attributeTypeName);
+
+			if (attribute != null)
+			{
+				typeDefinition.CustomAttributes.Remove(attribute);
+				return true;
+			}
+
 			return false;
 		}
 

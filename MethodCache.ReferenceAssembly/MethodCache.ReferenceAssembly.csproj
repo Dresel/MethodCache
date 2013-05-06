@@ -43,6 +43,9 @@
     <Compile Include="MethodResult.cs" />
     <Compile Include="TestClass1.cs" />
     <Compile Include="TestClass2.cs" />
+    <Compile Include="TestClass3.cs" />
+    <Compile Include="TestClass4.cs" />
+    <Compile Include="TestClass5.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

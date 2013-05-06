@@ -3,20 +3,12 @@
 	using MethodCache.ReferenceAssembly.Cache;
 
 	[Cache]
-	public class TestClass1
+	public class TestClass5
 	{
-		#region Constructors and Destructors
-
-		public TestClass1(ICache cache)
-		{
-			Cache = cache;
-		}
-
-		#endregion
-
 		#region Public Properties
 
-		public ICache Cache { get; set; }
+		// Wrong CacheType - ModuleWeaver should check Getter Type and should skip weaving of this class
+		public int Cache { get; set; }
 
 		#endregion
 
@@ -25,11 +17,6 @@
 		public int MethodOne(int x)
 		{
 			return x * x;
-		}
-
-		public MethodResult MethodTwo(string x)
-		{
-			return new MethodResult();
 		}
 
 		#endregion

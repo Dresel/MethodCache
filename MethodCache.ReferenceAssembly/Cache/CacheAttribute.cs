@@ -1,4 +1,4 @@
-﻿namespace MethodCache.Cache
+﻿namespace MethodCache.ReferenceAssembly.Cache
 {
 	using System;
 

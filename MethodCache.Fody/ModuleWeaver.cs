@@ -18,13 +18,11 @@
 
 		private const string CacheGetterName = "Cache";
 
-		private const string CacheInterfaceContainsMethodName = "Contains";
+		private const string CacheTypeContainsMethodName = "Contains";
 
-		private const string CacheInterfaceName = "ICache";
+		private const string CacheTypeRetrieveMethodName = "Retrieve";
 
-		private const string CacheInterfaceRetrieveMethodName = "Retrieve";
-
-		private const string CacheInterfaceStoreMethodName = "Store";
+		private const string CacheTypeStoreMethodName = "Store";
 
 		#endregion
 
@@ -65,16 +63,6 @@
 
 		#region Properties
 
-		private TypeDefinition CacheAttribute { get; set; }
-
-		private TypeDefinition CacheInterface { get; set; }
-
-		private MethodDefinition CacheInterfaceContainsMethod { get; set; }
-
-		private MethodDefinition CacheInterfaceRetrieveMethod { get; set; }
-
-		private MethodDefinition CacheInterfaceStoreMethod { get; set; }
-
 		private bool IsDebugBuild { get; set; }
 
 		#endregion
@@ -84,24 +72,6 @@
 		public void Execute()
 		{
 			IsDebugBuild = DefineConstants.Any(x => x.ToLower() == "debug");
-
-			// Check if CacheAttribute is existing
-			if ((CacheAttribute = FindCacheAttribute(ModuleDefinition, CacheAttributeName)) == null)
-			{
-				return;
-			}
-
-			// Check if CacheInterface is existing
-			if ((CacheInterface = FindCacheInterface(ModuleDefinition, CacheInterfaceName)) == null)
-			{
-				return;
-			}
-
-			// Check if CacheInterface methods are existing
-			if (!CheckCacheInterfaceMethods())
-			{
-				return;
-			}
 
 			WeaveMethods();
 
@@ -126,56 +96,49 @@
 
 		#region Methods
 
-		private MethodDefinition CacheInterfaceGetContainsMethod(TypeDefinition cacheInterface,
-			string cacheInterfaceContainsMethodName)
+		private MethodDefinition CacheTypeGetContainsMethod(TypeDefinition cacheType, string cacheTypeContainsMethodName)
 		{
 			return
-				(cacheInterface.GetMethod(cacheInterfaceContainsMethodName, cacheInterface.Module.ImportType<bool>(),
-					new[] { cacheInterface.Module.ImportType<string>() }));
+				(cacheType.GetMethod(cacheTypeContainsMethodName, cacheType.Module.ImportType<bool>(),
+					new[] { cacheType.Module.ImportType<string>() }));
 		}
 
-		private MethodDefinition CacheInterfaceGetRetrieveMethod(TypeDefinition cacheInterface,
-			string cacheInterfaceRetrieveMethodName)
+		private MethodDefinition CacheTypeGetRetrieveMethod(TypeDefinition cacheType, string cacheTypeRetrieveMethodName)
 		{
 			return
-				(cacheInterface.GetMethod(cacheInterfaceRetrieveMethodName, new GenericParameter("T", cacheInterface),
-					new[] { cacheInterface.Module.ImportType<string>() }));
+				(cacheType.GetMethod(cacheTypeRetrieveMethodName, new GenericParameter("T", cacheType),
+					new[] { cacheType.Module.ImportType<string>() }));
 		}
 
-		private MethodDefinition CacheInterfaceGetStoreMethod(TypeDefinition cacheInterface,
-			string cacheInterfaceStoreMethodName)
+		private MethodDefinition CacheTypeGetStoreMethod(TypeDefinition cacheInterface, string cacheTypeStoreMethodName)
 		{
 			return
-				(cacheInterface.GetMethod(cacheInterfaceStoreMethodName, cacheInterface.Module.ImportType(typeof(void)),
+				(cacheInterface.GetMethod(cacheTypeStoreMethodName, cacheInterface.Module.ImportType(typeof(void)),
 					new[] { cacheInterface.Module.ImportType<string>(), cacheInterface.Module.ImportType<object>() }));
 		}
 
-		private bool CheckCacheInterfaceMethods()
+		private bool CheckCacheTypeMethods(TypeDefinition cacheType)
 		{
-			LogInfo(string.Format("Checking CacheInterface methods ({0}, {1}, {2}).", CacheInterfaceContainsMethodName,
-				CacheInterfaceStoreMethodName, CacheInterfaceRetrieveMethodName));
+			LogInfo(string.Format("Checking CacheType methods ({0}, {1}, {2}).", CacheTypeContainsMethodName,
+				CacheTypeStoreMethodName, CacheTypeRetrieveMethodName));
 
-			if (
-				(CacheInterfaceContainsMethod = CacheInterfaceGetContainsMethod(CacheInterface, CacheInterfaceContainsMethodName)) ==
-					null)
+			if ((CacheTypeGetContainsMethod(cacheType, CacheTypeContainsMethodName)) == null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceContainsMethodName, CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeContainsMethodName, cacheType.FullName));
 
 				return false;
 			}
 
-			if ((CacheInterfaceStoreMethod = CacheInterfaceGetStoreMethod(CacheInterface, CacheInterfaceStoreMethodName)) == null)
+			if ((CacheTypeGetStoreMethod(cacheType, CacheTypeStoreMethodName)) == null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceStoreMethodName, CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeStoreMethodName, cacheType.FullName));
 
 				return false;
 			}
 
-			if (
-				(CacheInterfaceRetrieveMethod = CacheInterfaceGetRetrieveMethod(CacheInterface, CacheInterfaceRetrieveMethodName)) ==
-					null)
+			if ((CacheTypeGetRetrieveMethod(cacheType, CacheTypeRetrieveMethodName)) == null)
 			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheInterfaceRetrieveMethodName, CacheInterface.FullName));
+				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRetrieveMethodName, cacheType.FullName));
 
 				return false;
 			}
@@ -185,96 +148,20 @@
 			return true;
 		}
 
-		private TypeDefinition FindCacheAttribute(ModuleDefinition moduleDefinition, string cacheAttributeName)
-		{
-			LogInfo(string.Format("Searching for CacheAttribute ({0}) in assembly ({1}).", cacheAttributeName,
-				moduleDefinition.Name));
-
-			TypeDefinition cacheAttribute = moduleDefinition.Types.FirstOrDefault(x => x.Name == cacheAttributeName && x.IsClass);
-
-			if (cacheAttribute != null)
-			{
-				LogInfo(string.Format("{0} found ({1}).", cacheAttributeName, cacheAttribute.FullName));
-
-				return cacheAttribute;
-			}
-
-			LogInfo(string.Format("{0} not found in assembly ({1}). Resolving assembly references.", cacheAttributeName,
-				moduleDefinition.Name));
-
-			foreach (AssemblyNameReference reference in moduleDefinition.AssemblyReferences)
-			{
-				ModuleDefinition mainModule = moduleDefinition.AssemblyResolver.Resolve(reference).MainModule;
-
-				cacheAttribute = mainModule.Types.FirstOrDefault(x => x.Name == cacheAttributeName && x.IsClass);
-
-				if (cacheAttribute != null)
-				{
-					LogInfo(string.Format("{0} found ({1}).", cacheAttributeName, cacheAttribute.FullName));
-
-					return cacheAttribute;
-				}
-			}
-
-			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.", cacheAttributeName,
-				moduleDefinition.Name));
-
-			return null;
-		}
-
-		private TypeDefinition FindCacheInterface(ModuleDefinition moduleDefinition, string cacheInterfaceName)
-		{
-			LogInfo(string.Format("Searching for CacheInterface ({0}) in assembly ({1}).", cacheInterfaceName,
-				moduleDefinition.Name));
-
-			TypeDefinition cacheInterface =
-				moduleDefinition.Types.FirstOrDefault(x => x.Name == cacheInterfaceName && x.IsInterface);
-
-			if (cacheInterface != null)
-			{
-				LogInfo(string.Format("{0} found ({1}).", cacheInterfaceName, cacheInterface.FullName));
-
-				return cacheInterface;
-			}
-
-			LogInfo(string.Format("{0} not found in assembly ({1}). Resolving assembly references.", cacheInterfaceName,
-				moduleDefinition.Name));
-
-			foreach (AssemblyNameReference reference in moduleDefinition.AssemblyReferences)
-			{
-				ModuleDefinition mainModule = moduleDefinition.AssemblyResolver.Resolve(reference).MainModule;
-
-				cacheInterface = mainModule.Types.FirstOrDefault(x => x.Name == cacheInterfaceName && x.IsInterface);
-
-				if (cacheInterface != null)
-				{
-					LogInfo(string.Format("{0} found ({1}).", cacheInterfaceName, cacheInterface.FullName));
-
-					return cacheInterface;
-				}
-			}
-
-			LogWarning(string.Format("{0} not found in assembly ({1}) and assembly references.", cacheInterfaceName,
-				moduleDefinition.Name));
-
-			return null;
-		}
-
-		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, TypeDefinition cacheAttribute)
+		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, string cacheAttributeName)
 		{
 			LogInfo(string.Format("Searching for Methods in assembly ({0}).", moduleDefinition.Name));
 
 			HashSet<MethodDefinition> definitions = new HashSet<MethodDefinition>();
 
 			definitions.UnionWith(
-				moduleDefinition.Types.SelectMany(x => x.Methods.Where(y => y.ContainsAttribute(cacheAttribute))));
+				moduleDefinition.Types.SelectMany(x => x.Methods.Where(y => y.ContainsAttribute(cacheAttributeName))));
 			definitions.UnionWith(
-				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttribute))
-				                .SelectMany(x => x.Methods)
-				                .Where(
-					                x =>
-						                !x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor &&
-							                !x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>())));
+				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttributeName)).SelectMany(x => x.Methods)
+					.Where(
+						x =>
+							!x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor &&
+								!x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>())));
 
 			return definitions;
 		}
@@ -354,10 +241,14 @@
 			MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
 			propertyGet = propertyGet ?? methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
 
+			TypeDefinition propertyGetReturnTypeDefinition = propertyGet.ReturnType.Resolve();
+
 			current = current.Append(processor.Create(OpCodes.Ldarg_0), processor)
 				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
-				.Append(processor.Create(OpCodes.Callvirt, methodDefinition.Module.Import(CacheInterfaceContainsMethod)), processor)
+				.Append(processor.Create(OpCodes.Callvirt,
+					methodDefinition.Module.Import(CacheTypeGetContainsMethod(propertyGetReturnTypeDefinition, CacheTypeContainsMethodName))),
+					processor)
 				.Append(processor.Create(OpCodes.Brfalse, firstInstruction), processor);
 
 			// False branche (store value in cache of each return instruction)
@@ -378,7 +269,9 @@
 					.AppendLdloc(processor, cacheKeyIndex)
 					.AppendLdloc(processor, resultIndex)
 					.AppendBoxIfNecessary(processor, methodDefinition.ReturnType)
-					.Append(processor.Create(OpCodes.Callvirt, methodDefinition.Module.Import(CacheInterfaceStoreMethod)), processor)
+					.Append(processor.Create(OpCodes.Callvirt,
+						methodDefinition.Module.Import(CacheTypeGetStoreMethod(propertyGetReturnTypeDefinition, CacheTypeStoreMethodName))),
+						processor)
 					.AppendLdloc(processor, resultIndex);
 			}
 
@@ -393,7 +286,10 @@
 				.Append(processor.Create(OpCodes.Ldarg_0), processor)
 				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
-				.Append(processor.Create(OpCodes.Callvirt, methodDefinition.Module.Import(CacheInterfaceRetrieveMethod).MakeGeneric(new[] { methodDefinition.ReturnType })), processor)
+				.Append(processor.Create(OpCodes.Callvirt,
+					methodDefinition.Module.Import(CacheTypeGetRetrieveMethod(propertyGetReturnTypeDefinition, CacheTypeRetrieveMethodName))
+						.MakeGeneric(new[] { methodDefinition.ReturnType })),
+					processor)
 				.AppendStloc(processor, resultIndex).Append(processor.Create(OpCodes.Br, returnInstructions.Last().Previous), processor);
 
 			methodDefinition.Body.OptimizeMacros();
@@ -401,7 +297,7 @@
 
 		private void WeaveMethods()
 		{
-			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttribute);
+			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttributeName);
 
 			foreach (MethodDefinition methodDefinition in methodDefinitions)
 			{
@@ -419,10 +315,12 @@
 					continue;
 				}
 
-				if (propertyGet.ReturnType.FullName != CacheInterface.FullName)
+				if (!CheckCacheTypeMethods(propertyGet.ReturnType.Resolve()))
 				{
-					LogWarning(string.Format("Getter {0} of Class {1} is not of type {2}. Skip weaving of method {3}.", CacheGetterName,
-						methodDefinition.DeclaringType.Name, CacheInterface.Name, methodDefinition.Name));
+					LogWarning(
+						string.Format(
+							"ReturnType {0} of Getter {1} of Class {2} does not implement all methods. Skip weaving of method {3}.",
+							propertyGet.ReturnType.Name, CacheGetterName, methodDefinition.DeclaringType.Name, methodDefinition.Name));
 
 					continue;
 				}

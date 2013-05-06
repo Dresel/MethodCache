@@ -1,6 +1,7 @@
 ﻿namespace MethodCache.Tests
 {
 	using System;
+	using System.Diagnostics;
 	using System.IO;
 	using System.Reflection;
 	using MethodCache.Fody;
@@ -47,6 +48,10 @@
 
 			ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(newAssembly);
 			ModuleWeaver weavingTask = new ModuleWeaver { ModuleDefinition = moduleDefinition };
+
+			weavingTask.LogInfo = (message) => Debug.WriteLine(message);
+			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
+			weavingTask.LogError = (message) => new Exception(message);
 
 			weavingTask.Execute();
 			moduleDefinition.Write(newAssembly);

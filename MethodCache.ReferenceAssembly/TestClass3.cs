@@ -3,11 +3,11 @@
 	using MethodCache.ReferenceAssembly.Cache;
 
 	[Cache]
-	public class TestClass1
+	public class TestClass3
 	{
 		#region Constructors and Destructors
 
-		public TestClass1(ICache cache)
+		public TestClass3(DictionaryCache cache)
 		{
 			Cache = cache;
 		}
@@ -16,7 +16,7 @@
 
 		#region Public Properties
 
-		public ICache Cache { get; set; }
+		public DictionaryCache Cache { get; set; }
 
 		#endregion
 

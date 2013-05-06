@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace MethodCache.Cache
+﻿namespace MethodCache.ReferenceAssembly.Cache
 {
 	public interface ICache
 	{
