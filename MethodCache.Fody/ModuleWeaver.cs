@@ -139,7 +139,7 @@
 		private void RemoveReference()
 		{
 			AssemblyNameReference referenceToRemove =
-				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache.Attributes.dll");
+				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache.Attributes");
 
 			if (referenceToRemove == null)
 			{
@@ -314,8 +314,7 @@
 			foreach (MethodDefinition methodDefinition in methodDefinitions)
 			{
 				MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
-				propertyGet = propertyGet ??
-					methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+				propertyGet = propertyGet ?? methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
 
 				LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
 

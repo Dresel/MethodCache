@@ -35,6 +35,12 @@
 		}
 
 		[TestMethod]
+		public void ModuleWeaverRemovesMethodCacheAttributeReference()
+		{
+			Assert.IsFalse(assembly.GetReferencedAssemblies().Any(x => x.Name == "MethodCache.Attributes"));
+		}
+
+		[TestMethod]
 		public void TestClass1ClassLevelCacheAttributeCachedMethodTwoReturnsSameInstance()
 		{
 			// Arrage
