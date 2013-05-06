@@ -1,13 +1,14 @@
-﻿namespace MethodCache.ReferenceAssembly
+﻿namespace MethodCache.TestAssembly
 {
-	using MethodCache.ReferenceAssembly.Cache;
+	using MethodCache.Attributes;
+	using MethodCache.TestAssembly.Cache;
 
 	[Cache]
-	public class TestClass3
+	public class TestClass1
 	{
 		#region Constructors and Destructors
 
-		public TestClass3(DictionaryCache cache)
+		public TestClass1(ICache cache)
 		{
 			Cache = cache;
 		}
@@ -16,7 +17,7 @@
 
 		#region Public Properties
 
-		public DictionaryCache Cache { get; set; }
+		public ICache Cache { get; set; }
 
 		#endregion
 

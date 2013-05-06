@@ -36,8 +36,8 @@
 		{
 			string projectPath =
 				Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
-					@"..\..\..\MethodCache.ReferenceAssembly\MethodCache.ReferenceAssembly.csproj"));
-			string assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\MethodCache.ReferenceAssembly.dll");
+					@"..\..\..\MethodCache.TestAssembly\MethodCache.TestAssembly.csproj"));
+			string assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\MethodCache.TestAssembly.dll");
 
 #if (!DEBUG)
 			assemblyPath = assemblyPath.Replace("Debug", "Release");
@@ -52,6 +52,10 @@
 			weavingTask.LogInfo = (message) => Debug.WriteLine(message);
 			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
 			weavingTask.LogError = (message) => new Exception(message);
+
+#if (DEBUG)
+			weavingTask.DefineConstants.Add("DEBUG");
+#endif
 
 			weavingTask.Execute();
 			moduleDefinition.Write(newAssembly);

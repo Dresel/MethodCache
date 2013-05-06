@@ -1,13 +1,14 @@
-﻿namespace MethodCache.ReferenceAssembly
+﻿namespace MethodCache.TestAssembly
 {
-	using MethodCache.ReferenceAssembly.Cache;
+	using MethodCache.Attributes;
 
 	[Cache]
 	public class TestClass5
 	{
+		// Wrong CacheType - ModuleWeaver should check Getter Type and should skip weaving of this class
+
 		#region Public Properties
 
-		// Wrong CacheType - ModuleWeaver should check Getter Type and should skip weaving of this class
 		public int Cache { get; set; }
 
 		#endregion

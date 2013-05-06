@@ -14,15 +14,17 @@
 	{
 		#region Constants
 
-		private const string CacheAttributeName = "CacheAttribute";
+		public const string CacheAttributeName = "CacheAttribute";
 
-		private const string CacheGetterName = "Cache";
+		public const string CacheGetterName = "Cache";
 
-		private const string CacheTypeContainsMethodName = "Contains";
+		public const string CacheTypeContainsMethodName = "Contains";
 
-		private const string CacheTypeRetrieveMethodName = "Retrieve";
+		public const string CacheTypeRetrieveMethodName = "Retrieve";
 
-		private const string CacheTypeStoreMethodName = "Store";
+		public const string CacheTypeStoreMethodName = "Store";
+
+		public const string NoCacheAttributeName = "NoCacheAttribute";
 
 		#endregion
 
@@ -137,18 +139,21 @@
 		private void RemoveReference()
 		{
 			AssemblyNameReference referenceToRemove =
-				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache");
+				ModuleDefinition.AssemblyReferences.FirstOrDefault(x => x.Name == "MethodCache.Attributes.dll");
+
 			if (referenceToRemove == null)
 			{
-				LogInfo("\tNo reference to 'MethodCache.dll' found. References not modified.");
+				LogInfo("No reference to 'MethodCache.Attributes.dll' found. References not modified.");
+
 				return;
 			}
 
 			ModuleDefinition.AssemblyReferences.Remove(referenceToRemove);
-			LogInfo("\tRemoving reference to 'MethodCache.dll'.");
+
+			LogInfo("Removing reference to 'MethodCache.Attributes.dll'.");
 		}
 
-		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, string cacheAttributeName)
+		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, string cacheAttributeName, string noCacheAttributeName)
 		{
 			LogInfo(string.Format("Searching for Methods in assembly ({0}).", moduleDefinition.Name));
 
@@ -159,15 +164,23 @@
 			definitions.UnionWith(
 				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttributeName)).SelectMany(x => x.Methods)
 					.Where(
-						x =>
+						x => !x.ContainsAttribute(noCacheAttributeName) && (
 							!x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor &&
-								!x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>())));
+								!x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>()))));
+
+			// Remove CacheAttributes and NoCacheAttributes
+			definitions.ToList().ForEach(x => x.RemoveAttribute(cacheAttributeName));
+			definitions.ToList().ForEach(x => x.DeclaringType.RemoveAttribute(cacheAttributeName));
+
+			moduleDefinition.Types.SelectMany(x => x.Methods).ToList().ForEach(x => x.RemoveAttribute(NoCacheAttributeName));
 
 			return definitions;
 		}
 
 		private void WeaveMethod(MethodDefinition methodDefinition)
 		{
+			methodDefinition.Body.InitLocals = true;
+
 			methodDefinition.Body.SimplifyMacros();
 
 			Instruction firstInstruction = methodDefinition.Body.Instructions.First();
@@ -201,8 +214,7 @@
 				builder.Append(string.Format("_{{{0}}}", i));
 			}
 
-			Instruction current = firstInstruction
-				.Prepend(processor.Create(OpCodes.Ldstr, builder.ToString()), processor);
+			Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, builder.ToString()), processor);
 
 			// Create object[] for string.format
 			current = current
@@ -214,7 +226,8 @@
 			for (int i = 0; i < methodDefinition.Parameters.Count; i++)
 			{
 				current = current
-					.AppendLdloc(processor, objectArrayIndex).AppendLdcI4(processor, i)
+					.AppendLdloc(processor, objectArrayIndex)
+					.AppendLdcI4(processor, i)
 					.AppendLdarg(processor, i + 1)
 					.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
 					.Append(processor.Create(OpCodes.Stelem_Ref), processor);
@@ -223,7 +236,8 @@
 			// Call string.format
 			current = current
 				.AppendLdloc(processor, objectArrayIndex)
-				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
+				.Append(processor.Create(OpCodes.Call,
+					methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
 				.AppendStloc(processor, cacheKeyIndex);
 
 			if (IsDebugBuild)
@@ -232,7 +246,8 @@
 				current = current
 					.AppendLdstr(processor, "CacheKey created: {0}")
 					.AppendLdloc(processor, cacheKeyIndex)
-					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object) })), processor)
+					.Append(processor.Create(OpCodes.Call,
+						methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object) })), processor)
 					.Append(processor.Create(OpCodes.Call,
 						methodDefinition.Module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })), processor);
 			}
@@ -243,7 +258,8 @@
 
 			TypeDefinition propertyGetReturnTypeDefinition = propertyGet.ReturnType.Resolve();
 
-			current = current.Append(processor.Create(OpCodes.Ldarg_0), processor)
+			current = current
+				.Append(processor.Create(OpCodes.Ldarg_0), processor)
 				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
 				.Append(processor.Create(OpCodes.Callvirt,
@@ -254,13 +270,11 @@
 			// False branche (store value in cache of each return instruction)
 			foreach (Instruction returnInstruction in returnInstructions)
 			{
-				returnInstruction.Previous
-					.AppendStloc(processor, resultIndex);
+				returnInstruction.Previous.AppendStloc(processor, resultIndex);
 
 				if (IsDebugBuild)
 				{
-					returnInstruction.Previous
-						.AppendDebugWrite(processor, "Storing to cache.", methodDefinition.Module);
+					returnInstruction.Previous.AppendDebugWrite(processor, "Storing to cache.", methodDefinition.Module);
 				}
 
 				returnInstruction.Previous
@@ -277,27 +291,25 @@
 
 			if (IsDebugBuild)
 			{
-				current = current
-					.AppendDebugWrite(processor, "Loading from cache.", methodDefinition.Module);
+				current = current.AppendDebugWrite(processor, "Loading from cache.", methodDefinition.Module);
 			}
 
 			// Start of branche true
-			current = current
-				.Append(processor.Create(OpCodes.Ldarg_0), processor)
+			current = current.Append(processor.Create(OpCodes.Ldarg_0), processor)
 				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
 				.Append(processor.Create(OpCodes.Callvirt,
 					methodDefinition.Module.Import(CacheTypeGetRetrieveMethod(propertyGetReturnTypeDefinition, CacheTypeRetrieveMethodName))
-						.MakeGeneric(new[] { methodDefinition.ReturnType })),
-					processor)
-				.AppendStloc(processor, resultIndex).Append(processor.Create(OpCodes.Br, returnInstructions.Last().Previous), processor);
+						.MakeGeneric(new[] { methodDefinition.ReturnType })), processor)
+				.AppendStloc(processor, resultIndex)
+				.Append(processor.Create(OpCodes.Br, returnInstructions.Last().Previous), processor);
 
 			methodDefinition.Body.OptimizeMacros();
 		}
 
 		private void WeaveMethods()
 		{
-			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttributeName);
+			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttributeName, NoCacheAttributeName);
 
 			foreach (MethodDefinition methodDefinition in methodDefinitions)
 			{

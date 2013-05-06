@@ -31,8 +31,8 @@
     <Copy SourceFiles="$(SolutionDir)MethodCache.Fody\bin\$(ConfigurationName)\MethodCache.Fody.dll" DestinationFolder="$(SolutionDir)NuGetBuild" />
     <Copy SourceFiles="$(ProjectDir)install.ps1" DestinationFolder="$(SolutionDir)NuGetBuild\Tools" />
     <Copy SourceFiles="$(ProjectDir)uninstall.ps1" DestinationFolder="$(SolutionDir)NuGetBuild\Tools" />
-    <Copy SourceFiles="$(SolutionDir)MethodCache.ReferenceAssembly\bin\$(ConfigurationName)\MethodCache.ReferenceAssembly.dll" DestinationFolder="$(SolutionDir)NuGetBuild\Lib\portable-net4+sl4+wp7+win8" />
-    <Copy SourceFiles="$(SolutionDir)MethodCache.ReferenceAssembly\bin\$(ConfigurationName)\MethodCache.ReferenceAssembly.xml" DestinationFolder="$(SolutionDir)NuGetBuild\Lib\portable-net4+sl4+wp7+win8" />
+    <Copy SourceFiles="$(SolutionDir)MethodCache.Attributes\bin\$(ConfigurationName)\MethodCache.Attributes.dll" DestinationFolder="$(SolutionDir)NuGetBuild\Lib\portable-net4+sl4+wp7+win8" />
+    <Copy SourceFiles="$(SolutionDir)MethodCache.Attributes\bin\$(ConfigurationName)\MethodCache.Attributes.xml" DestinationFolder="$(SolutionDir)NuGetBuild\Lib\portable-net4+sl4+wp7+win8" />
     <PepitaPackage.WeavingTask NuGetBuildDirectory="$(SolutionDir)NuGetBuild" MetadataAssembly="$(SolutionDir)MethodCache.Fody\bin\$(ConfigurationName)\MethodCache.Fody.dll" />
   </Target>
   <ItemGroup>
@@ -43,9 +43,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MethodCache.ReferenceAssembly\MethodCache.ReferenceAssembly.csproj">
+    <ProjectReference Include="..\MethodCache.Attributes\MethodCache.Attributes.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Name>MethodCache.ReferenceAssembly</Name>
+      <Name>MethodCache.Attributes</Name>
       <Project>{1D0AD049-7240-41CD-8B69-7F48AA5FAA6C}</Project>
     </ProjectReference>
   </ItemGroup>

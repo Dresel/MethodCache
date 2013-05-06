@@ -80,58 +80,17 @@
 
 		public static bool ContainsAttribute(this MethodDefinition methodDefinition, MemberReference attributeType)
 		{
-			CustomAttribute attribute =
-				methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
-
-			if (attribute != null)
-			{
-				methodDefinition.CustomAttributes.Remove(attribute);
-				return true;
-			}
-
-			return false;
+			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
 		}
 
 		public static bool ContainsAttribute(this MethodDefinition methodDefinition, string attributeTypeName)
 		{
-			CustomAttribute attribute =
-				methodDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.Name == attributeTypeName);
-
-			if (attribute != null)
-			{
-				methodDefinition.CustomAttributes.Remove(attribute);
-				return true;
-			}
-
-			return false;
-		}
-
-		public static bool ContainsAttribute(this TypeDefinition typeDefinition, MemberReference attributeType)
-		{
-			CustomAttribute attribute =
-				typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
-
-			if (attribute != null)
-			{
-				typeDefinition.CustomAttributes.Remove(attribute);
-				return true;
-			}
-
-			return false;
+			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
 		}
 
 		public static bool ContainsAttribute(this TypeDefinition typeDefinition, string attributeTypeName)
 		{
-			CustomAttribute attribute =
-				typeDefinition.CustomAttributes.FirstOrDefault(x => x.Constructor.DeclaringType.Name == attributeTypeName);
-
-			if (attribute != null)
-			{
-				typeDefinition.CustomAttributes.Remove(attribute);
-				return true;
-			}
-
-			return false;
+			return typeDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
 		}
 
 		public static MethodDefinition GetInheritedPropertyGet(this TypeDefinition baseType, string propertyName)
@@ -267,6 +226,20 @@
 			processor.InsertBefore(instruction, instructionBefore);
 
 			return instructionBefore;
+		}
+
+		public static void RemoveAttribute(this MethodDefinition methodDefinition, string attributeTypeName)
+		{
+			methodDefinition.CustomAttributes
+				.Where(x => x.Constructor.DeclaringType.Name == attributeTypeName).ToList()
+				.ForEach(x => methodDefinition.CustomAttributes.Remove(x));
+		}
+
+		public static void RemoveAttribute(this TypeDefinition typeDefinition, string attributeTypeName)
+		{
+			typeDefinition.CustomAttributes
+				.Where(x => x.Constructor.DeclaringType.Name == attributeTypeName).ToList()
+				.ForEach(x => typeDefinition.CustomAttributes.Remove(x));
 		}
 
 		#endregion

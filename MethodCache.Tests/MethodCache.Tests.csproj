@@ -81,9 +81,13 @@
       <Project>{C3578A7B-09A6-4444-9383-0DEAFA4958BD}</Project>
       <Name>MethodCache.Fody</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MethodCache.ReferenceAssembly\MethodCache.ReferenceAssembly.csproj">
+    <ProjectReference Include="..\MethodCache.Attributes\MethodCache.Attributes.csproj">
       <Project>{1D0AD049-7240-41CD-8B69-7F48AA5FAA6C}</Project>
-      <Name>MethodCache.ReferenceAssembly</Name>
+      <Name>MethodCache.Attributes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MethodCache.TestAssembly\MethodCache.TestAssembly.csproj">
+      <Project>{cb72153a-e71c-41da-8219-a60d0682d498}</Project>
+      <Name>MethodCache.TestAssembly</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

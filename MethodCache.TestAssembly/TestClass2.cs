@@ -1,6 +1,7 @@
-﻿namespace MethodCache.ReferenceAssembly
+﻿namespace MethodCache.TestAssembly
 {
-	using MethodCache.ReferenceAssembly.Cache;
+	using MethodCache.Attributes;
+	using MethodCache.TestAssembly.Cache;
 
 	public class TestClass2
 	{

@@ -1,4 +1,4 @@
-﻿namespace MethodCache.ReferenceAssembly.Cache
+﻿namespace MethodCache.TestAssembly.Cache
 {
 	using System.Collections.Generic;
 
@@ -8,14 +8,12 @@
 
 		public DictionaryCache()
 		{
-			this.Storage = new Dictionary<string, object>();
+			Storage = new Dictionary<string, object>();
 		}
 
 		#endregion
 
 		#region Public Properties
-
-		public int NumContainsCalls { get; private set; }
 
 		public int NumRetrieveCalls { get; private set; }
 
@@ -33,23 +31,21 @@
 
 		public bool Contains(string key)
 		{
-			this.NumContainsCalls++;
-
-			return this.Storage.ContainsKey(key);
+			return Storage.ContainsKey(key);
 		}
 
 		public T Retrieve<T>(string key)
 		{
-			this.NumRetrieveCalls++;
+			NumRetrieveCalls++;
 
-			return (T)this.Storage[key];
+			return (T)Storage[key];
 		}
 
 		public void Store(string key, object data)
 		{
-			this.NumStoreCalls++;
+			NumStoreCalls++;
 
-			this.Storage[key] = data;
+			Storage[key] = data;
 		}
 
 		#endregion

@@ -1,8 +1,11 @@
 ﻿namespace MethodCache.Tests
 {
+	using System;
+	using System.Linq;
 	using System.Reflection;
-	using MethodCache.ReferenceAssembly;
-	using MethodCache.ReferenceAssembly.Cache;
+	using MethodCache.Fody;
+	using MethodCache.TestAssembly;
+	using MethodCache.TestAssembly.Cache;
 	using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 	[TestClass]
@@ -79,18 +82,14 @@
 		}
 
 		[TestMethod]
-		public void TestClass2ClassLevelCacheAttributeNotCachedMethodTwoReturnsDifferentInstances()
+		public void TestClass1ClassLevelCacheAttributeSuccessfullyRemoved()
 		{
-			// Arrage
 			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
-			dynamic testClass2 = WeaverHelper.CreateInstance<TestClass2>(assembly, cache);
+			dynamic testClass1 = WeaverHelper.CreateInstance<TestClass1>(assembly, cache);
 
-			// Act
-			dynamic instance1 = testClass2.MethodTwo("1337");
-			dynamic instance2 = testClass2.MethodTwo("1337");
+			Type classType = testClass1.GetType();
 
-			// Assert
-			Assert.IsTrue(!ReferenceEquals(instance1, instance2));
+			Assert.IsFalse(classType.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.CacheAttributeName));
 		}
 
 		[TestMethod]
@@ -123,6 +122,33 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreCalls == 0);
 			Assert.IsTrue(cache.NumRetrieveCalls == 0);
+		}
+
+		[TestMethod]
+		public void TestClass2MethodLevelCacheAttributeNotCachedMethodTwoReturnsDifferentInstances()
+		{
+			// Arrage
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass2 = WeaverHelper.CreateInstance<TestClass2>(assembly, cache);
+
+			// Act
+			dynamic instance1 = testClass2.MethodTwo("1337");
+			dynamic instance2 = testClass2.MethodTwo("1337");
+
+			// Assert
+			Assert.IsTrue(!ReferenceEquals(instance1, instance2));
+		}
+
+		[TestMethod]
+		public void TestClass2MethodLevelCacheAttributeSuccessfullyRemoved()
+		{
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass2 = WeaverHelper.CreateInstance<TestClass2>(assembly, cache);
+
+			Type classType = testClass2.GetType();
+			MethodInfo methodInfo = classType.GetMethod("MethodOne");
+
+			Assert.IsFalse(methodInfo.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.CacheAttributeName));
 		}
 
 		[TestMethod]
@@ -179,6 +205,65 @@
 			testClass5.MethodOne(1337);
 
 			// Assert (test should not throw any exceptions)
+		}
+
+		[TestMethod]
+		public void TestClass6InheritedCacheGetterCanBeUsed()
+		{
+			// Arrage
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass6 = WeaverHelper.CreateInstance<TestClass6>(assembly, cache);
+
+			// Act
+			testClass6.MethodThree(1337);
+			testClass6.MethodThree(1337);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+		}
+
+		[TestMethod]
+		public void TestClass7MethodLevelNoCacheAttributeDoesNotCachesMethodTwo()
+		{
+			// Arrage
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass7 = WeaverHelper.CreateInstance<TestClass7>(assembly, cache);
+
+			// Act
+			testClass7.MethodTwo("1337");
+			testClass7.MethodTwo("1337");
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 0);
+			Assert.IsTrue(cache.NumRetrieveCalls == 0);
+		}
+
+		[TestMethod]
+		public void TestClass7MethodLevelNoCacheAttributeNotCachedMethodTwoReturnsDifferentInstances()
+		{
+			// Arrage
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass7 = WeaverHelper.CreateInstance<TestClass7>(assembly, cache);
+
+			// Act
+			dynamic instance1 = testClass7.MethodTwo("1337");
+			dynamic instance2 = testClass7.MethodTwo("1337");
+
+			// Assert
+			Assert.IsTrue(!ReferenceEquals(instance1, instance2));
+		}
+
+		[TestMethod]
+		public void TestClass7MethodLevelNoCacheAttributeSuccessfullyRemoved()
+		{
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+			dynamic testClass7 = WeaverHelper.CreateInstance<TestClass7>(assembly, cache);
+
+			Type classType = testClass7.GetType();
+			MethodInfo methodInfo = classType.GetMethod("MethodTwo");
+
+			Assert.IsFalse(methodInfo.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.NoCacheAttributeName));
 		}
 
 		#endregion

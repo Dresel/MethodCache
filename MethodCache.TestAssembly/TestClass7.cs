@@ -1,13 +1,20 @@
-﻿namespace MethodCache.ReferenceAssembly
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MethodCache.TestAssembly
 {
-	using MethodCache.ReferenceAssembly.Cache;
+	using MethodCache.Attributes;
+	using MethodCache.TestAssembly.Cache;
 
 	[Cache]
-	public class TestClass1
+	public class TestClass7
 	{
 		#region Constructors and Destructors
 
-		public TestClass1(ICache cache)
+		public TestClass7(ICache cache)
 		{
 			Cache = cache;
 		}
@@ -27,6 +34,7 @@
 			return x * x;
 		}
 
+		[NoCache]
 		public MethodResult MethodTwo(string x)
 		{
 			return new MethodResult();
