@@ -64,8 +64,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>CommonAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="ModuleWeaverTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Verifier.cs" />
     <Compile Include="WeaverHelper.cs" />
   </ItemGroup>
@@ -81,6 +83,9 @@
       <Project>{1D0AD049-7240-41CD-8B69-7F48AA5FAA6C}</Project>
       <Name>MethodCache.ReferenceAssembly</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
