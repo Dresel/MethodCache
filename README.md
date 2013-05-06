@@ -18,7 +18,6 @@ There is a nuget package avaliable here http://nuget.org/packages/MethodCache.Fo
 
 ## What gets compiled
 
-    [Cache]
     public int Add(int a, int b)
     {
         string cacheKey = string.Format("Namespace.Class.Add_{0}_{1}", new object[] { a, b });
@@ -38,33 +37,17 @@ There is a nuget package avaliable here http://nuget.org/packages/MethodCache.Fo
 # How to use
 
   * Install MethodCache.Fody via Nuget
-  * Add a CacheAttribute to your Solution to decorate your methods or classes
-  * Add an ICache Interface
-  * Create an ICache Implementation (MemCache, FileCache, DBCache, ...)
+  * Create an Cache Implementation (MemCache, FileCache, DBCache, ...) which implements Contains, Retrieve and Store methods.
+
+Optional
+
+  * Add your own CacheAttribute and NoCacheAttribute to your Solution to decorate your methods or classes (you can use the existing attributes defined in MethodCache.Attributes)
 
 ## Example
+  
+DictionaryCache (in-memory implementation):
 
-CacheAttribute
-
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public class CacheAttribute : Attribute
-    {
-    }
-
-ICacheInterface
-
-    public interface ICache
-    {
-        bool Contains(string key);
-
-        T Retrieve<T>(string key);
-
-        void Store(string key, object data);
-    }
-    
-DictionaryCache (ICache memory implementation)
-
-    public class DictionaryCache : ICache
+    public class DictionaryCache
     {
         public DictionaryCache()
         {
@@ -72,6 +55,8 @@ DictionaryCache (ICache memory implementation)
         }
 
         private Dictionary<string, object> Storage { get; set; }
+
+        // Note: The methods Contains, Retrieve, Store must exactly look like the following:
 
         public bool Contains(string key)
         {
@@ -89,7 +74,7 @@ DictionaryCache (ICache memory implementation)
         }
     }
 
-Now all the preparation is done and you can start with the real work. The classes you want to cache must contain an ICache Getter (can also be inherited from a baseclass). Let's start decorating ...
+Now all the preparation is done and you can start with the real work. The classes you want to cache must contain an Cache Getter (can also be inherited from a baseclass). Let's start decorating ...
 
     // Mark the class to enable caching of every method ...
 
@@ -102,7 +87,8 @@ Now all the preparation is done and you can start with the real work. The classe
             Cache = new DictionaryCache();
         }
 
-        private ICache Cache { get; set; }
+        // Consider using ICache Interface
+        private DictionaryCache Cache { get; set; }
 
         // This method will be cached
         public int Add(int a, int b)
@@ -115,6 +101,13 @@ Now all the preparation is done and you can start with the real work. The classe
         {
             return a + b;
         }   
+        
+        // This method will not be cached
+        [NoCache]
+        public int ThirdMethod(int x)
+        {
+            return x * x;
+        }  
     }
     
     // or mark the methods you want to cache explicitly.
@@ -139,6 +132,67 @@ Now all the preparation is done and you can start with the real work. The classe
         {
             return a + b;
         }
+        
+        public int ThirdMethod(int x)
+        {
+            return x * x;
+        }  
     }
 
 ... and let MethodCache do the rest.
+
+## Miscellaneous
+
+### Improvements
+
+For production I would suggest using some DI framework and creating an ICache interface:
+
+    public interface ICache
+    {
+        bool Contains(string key);
+
+        T Retrieve<T>(string key);
+
+        void Store(string key, object data);
+    }
+    
+    public class MyService
+    {
+        // Constructor injection
+        public MyService(ICache cache)
+        {
+            Cache = cache;
+        }
+        
+        protected ICache Cache { get; set; }
+    }
+
+### Runtime Debug messages
+
+When compiled in Debug mode, MethodCache outputs Cache information with Debug.WriteLine:
+
+    CacheKey created: MethodCache.TestAssembly.TestClass1.MethodOne_1337
+    Storing to cache.
+    CacheKey created: MethodCache.TestAssembly.TestClass1.MethodOne_1337
+    Loading from cache.
+    ...
+
+### Enable Weaving Build Messages
+
+Be default, only warnings like a missing Cache Getter are shown in the build log. To enable detailed information, modify the following line in Fody.targets
+
+From
+
+    <FodyMessageImportance Condition="$(FodyMessageImportance) == '' Or $(FodyMessageImportance) == '*Undefined*'">Low</FodyMessageImportance>
+
+To
+
+    <FodyMessageImportance Condition="$(FodyMessageImportance) == '' Or $(FodyMessageImportance) == '*Undefined*'">High</FodyMessageImportance>
+
+You will now see detailed weaving information in the build log:
+
+    Searching for Methods in assembly (MethodCache.TestAssembly.dll).
+    Weaving method TestClassOne::MethodOne.
+    Checking CacheType methods (Contains, Store, Retrieve).
+    CacheType methods found.
+    ...
