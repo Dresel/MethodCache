@@ -228,7 +228,7 @@
 				current = current
 					.AppendLdloc(processor, objectArrayIndex)
 					.AppendLdcI4(processor, i)
-					.AppendLdarg(processor, i + 1)
+					.AppendLdarg(processor, (!methodDefinition.IsStatic ? i + 1 : i))
 					.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
 					.Append(processor.Create(OpCodes.Stelem_Ref), processor);
 			}
@@ -258,8 +258,10 @@
 
 			TypeDefinition propertyGetReturnTypeDefinition = propertyGet.ReturnType.Resolve();
 
+			if (!methodDefinition.IsStatic)
+				current = current.AppendLdarg(processor, 0);
+
 			current = current
-				.Append(processor.Create(OpCodes.Ldarg_0), processor)
 				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
 				.Append(processor.Create(OpCodes.Callvirt,
@@ -277,8 +279,10 @@
 					returnInstruction.Previous.AppendDebugWrite(processor, "Storing to cache.", methodDefinition.Module);
 				}
 
+				if (!methodDefinition.IsStatic)
+					returnInstruction.Previous.AppendLdarg(processor, 0);
+
 				returnInstruction.Previous
-					.Append(processor.Create(OpCodes.Ldarg_0), processor)
 					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 					.AppendLdloc(processor, cacheKeyIndex)
 					.AppendLdloc(processor, resultIndex)
@@ -294,9 +298,11 @@
 				current = current.AppendDebugWrite(processor, "Loading from cache.", methodDefinition.Module);
 			}
 
+			if (!methodDefinition.IsStatic)
+				current = current.AppendLdarg(processor, 0);
+
 			// Start of branche true
-			current = current.Append(processor.Create(OpCodes.Ldarg_0), processor)
-				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
+			current.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
 				.Append(processor.Create(OpCodes.Callvirt,
 					methodDefinition.Module.Import(CacheTypeGetRetrieveMethod(propertyGetReturnTypeDefinition, CacheTypeRetrieveMethodName))
@@ -321,6 +327,14 @@
 				if (propertyGet == null)
 				{
 					LogWarning(string.Format("Class {0} does not contain or inherit Getter {1}. Skip weaving of method {2}.",
+						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+
+					continue;
+				}
+
+				if (methodDefinition.IsStatic && !propertyGet.IsStatic)
+				{
+					LogWarning(string.Format("Method {2} of Class {0} is static, Getter {1} is not. Skip weaving of method {2}.",
 						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
 
 					continue;

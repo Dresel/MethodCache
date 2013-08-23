@@ -44,6 +44,7 @@
     </Compile>
     <Compile Include="Cache\DictionaryCache.cs" />
     <Compile Include="Cache\ICache.cs" />
+    <Compile Include="TestClass9.cs" />
     <Compile Include="TestClass6.cs" />
     <Compile Include="MethodResult.cs" />
     <Compile Include="TestClass1.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="TestClass4.cs" />
     <Compile Include="TestClass5.cs" />
     <Compile Include="TestClass7.cs" />
+    <Compile Include="TestClass8.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MethodCache.Attributes\MethodCache.Attributes.csproj">
