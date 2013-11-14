@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>MethodCache.Fody</id>
+        <version>1.3.2</version>
+        <title>MethodCache.Fody</title>
+        <authors>Christopher Dresel</authors>
+        <owners>Christopher Dresel</owners>
+        <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+        <projectUrl>http://github.com/Dresel/MethodCache</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A method caching Fody addin.</description>
+        <summary />
+        <language>en-US</language>
+        <tags>ILWeaving, Fody, Cecil, Caching</tags>
+        <dependencies>
+            <dependency id="Fody" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="input\lib\net40\MethodCache.Attributes.dll" target="lib\net40\MethodCache.Attributes.dll" />
+        <file src="tools\net40\install.ps1" target="tools\net40\install.ps1" />
+        <file src="tools\net40\uninstall.ps1" target="tools\net40\uninstall.ps1" />
+        <file src="input\lib\net40\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
+    </files>
+</package>
