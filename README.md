@@ -177,6 +177,8 @@ When compiled in Debug mode, MethodCache outputs Cache information with Debug.Wr
     Loading from cache.
     ...
 
+If you do not like this behaviour (e.g. if lots of messages slow down the application), add SkipDebugOutput="false" to ModuleWeavers.xml.
+
 ### Enable Weaving Build Messages
 
 Be default, only warnings like a missing Cache Getter are shown in the build log. To enable detailed information, modify the following line in Fody.targets

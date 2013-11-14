@@ -61,9 +61,9 @@
 		{
 			LogDebugOutput = DefineConstants.Any(x => x.ToLower() == "debug");
 
-			if (Config.Attributes().Any(x => x.Name.ToString().ToLower() == "skipoutput" && x.Value.ToLower() == "true"))
+			if (Config.Attributes().Any(x => x.Name.ToString().ToLower() == "skipdebugoutput" && x.Value.ToLower() == "true"))
 			{
-				LogWarning("Skipping Debug output.");
+				LogWarning("Skipping Debug Output.");
 				LogDebugOutput = false;
 			}
 
