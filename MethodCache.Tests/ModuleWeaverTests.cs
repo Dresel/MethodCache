@@ -333,5 +333,21 @@
 			Assert.IsTrue(cache.NumStoreCalls == 1);
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
+
+	    [Test]
+	    public void CachingReadOnlyProperties()
+	    {
+	        // Arrange
+            var cache = new DictionaryCache();
+	        var instance = new TestClassWithProperties(cache);
+
+	        // Act
+            var value = instance.ReadOnlyProperty;
+            value = instance.ReadOnlyProperty;
+
+	        // Assert
+	        Assert.IsTrue(cache.NumStoreCalls == 1);
+	        Assert.IsTrue(cache.NumRetrieveCalls == 1);
+	    }
 	}
 }
