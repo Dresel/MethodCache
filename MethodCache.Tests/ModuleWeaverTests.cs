@@ -338,8 +338,8 @@
 	    public void CachingReadOnlyProperties()
 	    {
 	        // Arrange
-            var cache = new DictionaryCache();
-	        var instance = new TestClassWithProperties(cache);
+	        var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+	        var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
 
 	        // Act
             var value = instance.ReadOnlyProperty;

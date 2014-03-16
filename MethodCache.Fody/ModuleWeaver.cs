@@ -156,7 +156,7 @@
 					.Where(
 						x =>
 							!x.ContainsAttribute(noCacheAttributeName) &&
-								(!x.IsSpecialName && !x.IsGetter && !x.IsSetter && !x.IsConstructor &&
+								(!x.IsSetter && !x.IsConstructor &&
 									!x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>()))));
 
 			// Remove CacheAttributes and NoCacheAttributes
