@@ -5,21 +5,21 @@
 	using System.Reflection;
 	using MethodCache.Fody;
 	using MethodCache.Tests.TestAssembly;
-	using MethodCache.Tests.TestAssembly.Cache;
-	using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using MethodCache.Tests.TestAssembly.Cache;
+    using NUnit.Framework;
 
-	[TestClass]
+	[TestFixture]
 	public class ModuleWeaverTests
 	{
 		private static Assembly assembly;
 
-		[ClassInitialize]
-		public static void ClassInitialize(TestContext context)
+		[TestFixtureSetUp]
+		public static void ClassInitialize()
 		{
 			assembly = WeaverHelper.WeaveAssembly();
 		}
 
-		[TestMethod]
+		[Test]
 		public void ModuleWeaverExecuteWeavesCorrectIL()
 		{
 			string assemblyPath = assembly.CodeBase.Remove(0, 8);
@@ -28,13 +28,13 @@
 			Assert.IsTrue(result.Contains(string.Format("All Classes and Methods in {0} Verified.", assemblyPath)));
 		}
 
-		[TestMethod]
+		[Test]
 		public void ModuleWeaverRemovesMethodCacheAttributeReference()
 		{
 			Assert.IsFalse(assembly.GetReferencedAssemblies().Any(x => x.Name == "MethodCache.Attributes"));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass1ClassLevelCacheAttributeCachedMethodTwoReturnsSameInstance()
 		{
 			// Arrange
@@ -49,7 +49,7 @@
 			Assert.IsTrue(ReferenceEquals(instance1, instance2));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass1ClassLevelCacheAttributeCachesMethodOne()
 		{
 			// Arrange
@@ -65,7 +65,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass1ClassLevelCacheAttributeCachesMethodTwo()
 		{
 			// Arrange
@@ -81,7 +81,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass1ClassLevelCacheAttributeSuccessfullyRemoved()
 		{
 			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
@@ -89,10 +89,10 @@
 
 			Type classType = testClass1.GetType();
 
-			Assert.IsFalse(classType.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.CacheAttributeName));
+			Assert.IsFalse(classType.GetCustomAttributes(true).Any(x => x.GetType().Name == ModuleWeaver.CacheAttributeName));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass2MethodLevelCacheAttributeCachesMethodOne()
 		{
 			// Arrange
@@ -108,7 +108,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass2MethodLevelCacheAttributeDoesNotCachesMethodTwo()
 		{
 			// Arrange
@@ -124,7 +124,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 0);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass2MethodLevelCacheAttributeNotCachedMethodTwoReturnsDifferentInstances()
 		{
 			// Arrange
@@ -139,7 +139,7 @@
 			Assert.IsTrue(!ReferenceEquals(instance1, instance2));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass2MethodLevelCacheAttributeSuccessfullyRemoved()
 		{
 			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
@@ -147,11 +147,11 @@
 
 			Type classType = testClass2.GetType();
 			MethodInfo methodInfo = classType.GetMethod("MethodOne");
-
-			Assert.IsFalse(methodInfo.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.CacheAttributeName));
+            
+			Assert.IsFalse(methodInfo.GetCustomAttributes(true).Any(x => x.GetType().Name == ModuleWeaver.CacheAttributeName));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass3ConcreteCacheGetterCachesMethodOne()
 		{
 			// Arrange
@@ -167,7 +167,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass3ConcreteCacheGetterCachesMethodTwo()
 		{
 			// Arrange
@@ -183,7 +183,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass4MissingCacheGetterSuccessfullyIgnored()
 		{
 			// Arrange
@@ -195,7 +195,7 @@
 			// Assert (test should not throw any exceptions)
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass5WrongCacheGetterTypeSuccessfullyIgnored()
 		{
 			// Arrange
@@ -207,7 +207,7 @@
 			// Assert (test should not throw any exceptions)
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass6InheritedCacheGetterCanBeUsed()
 		{
 			// Arrange
@@ -223,7 +223,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass7MethodLevelNoCacheAttributeDoesNotCachesMethodTwo()
 		{
 			// Arrange
@@ -239,7 +239,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 0);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass7MethodLevelNoCacheAttributeNotCachedMethodTwoReturnsDifferentInstances()
 		{
 			// Arrange
@@ -254,7 +254,7 @@
 			Assert.IsTrue(!ReferenceEquals(instance1, instance2));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass7MethodLevelNoCacheAttributeSuccessfullyRemoved()
 		{
 			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
@@ -263,10 +263,10 @@
 			Type classType = testClass7.GetType();
 			MethodInfo methodInfo = classType.GetMethod("MethodTwo");
 
-			Assert.IsFalse(methodInfo.CustomAttributes.Any(x => x.AttributeType.Name == ModuleWeaver.NoCacheAttributeName));
+			Assert.IsFalse(methodInfo.GetCustomAttributes(true).Any(x => x.GetType().Name == ModuleWeaver.NoCacheAttributeName));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass8ClassLevelCacheAttributeCachedMethodTwoReturnsSameInstance()
 		{
 			// Arrange
@@ -276,7 +276,7 @@
 			Type cacheType = assembly.GetType(typeof(ICache).FullName);
 
 			PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
-			cacheProperty.SetValue(null, cache);
+			cacheProperty.SetValue(null, cache, null);
 
 			MethodInfo method = testClassType.GetMethod("MethodTwo", new[] { typeof(string) });
 
@@ -288,7 +288,7 @@
 			Assert.IsTrue(ReferenceEquals(instance1, instance2));
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass8ClassLevelCacheAttributeCachesMethodOne()
 		{
 			// Arrange
@@ -298,7 +298,7 @@
 			Type cacheType = assembly.GetType(typeof(ICache).FullName);
 
 			PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
-			cacheProperty.SetValue(null, cache);
+			cacheProperty.SetValue(null, cache, null);
 
 			MethodInfo method = testClassType.GetMethod("MethodOne", new[] { typeof(int) });
 
@@ -311,7 +311,7 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-		[TestMethod]
+		[Test]
 		public void TestClass8ClassLevelCacheAttributeCachesMethodTwo()
 		{
 			// Arrange
@@ -321,7 +321,7 @@
 			Type cacheType = assembly.GetType(typeof(ICache).FullName);
 
 			PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
-			cacheProperty.SetValue(null, cache);
+			cacheProperty.SetValue(null, cache, null);
 
 			MethodInfo method = testClassType.GetMethod("MethodTwo", new[] { typeof(string) });
 
