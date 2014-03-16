@@ -1,4 +1,6 @@
-﻿namespace MethodCache.Fody
+﻿using System.Text.RegularExpressions;
+
+namespace MethodCache.Fody
 {
 	using System;
 	using System.Collections.Generic;
@@ -194,18 +196,9 @@
 			ILProcessor processor = methodDefinition.Body.GetILProcessor();
 
 			// Generate CacheKeyTemplate
-			StringBuilder builder = new StringBuilder();
+			var builder = CreateCacheKeyString(methodDefinition);
 
-			builder.Append(methodDefinition.DeclaringType.FullName);
-			builder.Append(".");
-			builder.Append(methodDefinition.Name);
-
-			for (int i = 0; i < methodDefinition.Parameters.Count; i++)
-			{
-				builder.Append(string.Format("_{{{0}}}", i));
-			}
-
-			Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, builder.ToString()), processor);
+		    Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, builder), processor);
 
 			// Create object[] for string.format
 			current =
@@ -317,7 +310,30 @@
 			methodDefinition.Body.OptimizeMacros();
 		}
 
-		private void WeaveMethods()
+	    private static String CreateCacheKeyString(MethodDefinition methodDefinition)
+	    {
+	        StringBuilder builder = new StringBuilder();
+
+	        builder.Append(methodDefinition.DeclaringType.FullName);
+	        builder.Append(".");
+
+            if (methodDefinition.IsSpecialName && (methodDefinition.IsSetter || methodDefinition.IsGetter))
+            {
+                builder.Append(Regex.Replace(methodDefinition.Name, "[gs]et_", string.Empty));
+            }
+            else
+            {
+                builder.Append(methodDefinition.Name);
+            }
+
+	        for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+	        {
+	            builder.Append(string.Format("_{{{0}}}", i));
+	        }
+            return builder.ToString();
+	    }
+
+	    private void WeaveMethods()
 		{
 			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttributeName,
 				NoCacheAttributeName);
