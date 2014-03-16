@@ -145,7 +145,7 @@ namespace MethodCache.Fody
 
 		private IEnumerable<MethodDefinition> SelectMethods()
 		{
-			LogInfo(string.Format("Searching for Methods in assembly ({0}).", ModuleDefinition.Name));
+			LogInfo(string.Format("Searching for Methods and Properties in assembly ({0}).", ModuleDefinition.Name));
 
 		    foreach (var type in ModuleDefinition.Types)
 		    {
