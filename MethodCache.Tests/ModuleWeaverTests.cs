@@ -334,20 +334,35 @@
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
 		}
 
-	    [Test]
-	    public void CachingReadOnlyProperties()
-	    {
-	        // Arrange
-	        var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
-	        var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
+        [Test]
+        public void CachingReadOnlyProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
 
-	        // Act
+            // Act
             var value = instance.ReadOnlyProperty;
             value = instance.ReadOnlyProperty;
 
-	        // Assert
-	        Assert.IsTrue(cache.NumStoreCalls == 1);
-	        Assert.IsTrue(cache.NumRetrieveCalls == 1);
-	    }
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void CachedReadOnlyPropertyCacheAttributeRemoved()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
+            Type type = instance.GetType();
+
+            // Act
+            object[] customAttributes = type.GetCustomAttributes(true);
+
+            // Assert
+            Assert.IsEmpty(customAttributes);
+        }
 	}
 }
