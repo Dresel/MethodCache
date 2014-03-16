@@ -143,32 +143,59 @@ namespace MethodCache.Fody
 			LogInfo("Removing reference to 'MethodCache.Attributes.dll'.");
 		}
 
-		private IEnumerable<MethodDefinition> SelectMethods(ModuleDefinition moduleDefinition, string cacheAttributeName,
-			string noCacheAttributeName)
+		private IEnumerable<MethodDefinition> SelectMethods()
 		{
-			LogInfo(string.Format("Searching for Methods in assembly ({0}).", moduleDefinition.Name));
+			LogInfo(string.Format("Searching for Methods in assembly ({0}).", ModuleDefinition.Name));
 
-			HashSet<MethodDefinition> definitions = new HashSet<MethodDefinition>();
+		    foreach (var type in ModuleDefinition.Types)
+		    {
+		        foreach (var method in type.Methods)
+		        {
+		            if (ShouldWeaveMethod(method))
+		            {
+		                yield return method;
+		            }
 
-			definitions.UnionWith(
-				moduleDefinition.Types.SelectMany(x => x.Methods.Where(y => y.ContainsAttribute(cacheAttributeName))));
-			definitions.UnionWith(
-				moduleDefinition.Types.Where(x => x.IsClass && x.ContainsAttribute(cacheAttributeName))
-					.SelectMany(x => x.Methods)
-					.Where(
-						x =>
-							!x.ContainsAttribute(noCacheAttributeName) &&
-								(!x.IsSetter && !x.IsConstructor &&
-									!x.ContainsAttribute(moduleDefinition.ImportType<CompilerGeneratedAttribute>()))));
+                    method.RemoveAttribute(CacheAttributeName);
+                    method.RemoveAttribute(NoCacheAttributeName);
+		        }
 
-			// Remove CacheAttributes and NoCacheAttributes
-			definitions.ToList().ForEach(x => x.RemoveAttribute(cacheAttributeName));
-			definitions.ToList().ForEach(x => x.DeclaringType.RemoveAttribute(cacheAttributeName));
+		        foreach (var property in type.Properties)
+		        {
+                    if (ShouldWeaveProperty(property))
+                    {
+                        yield return property.GetMethod;
+                    }
 
-			moduleDefinition.Types.SelectMany(x => x.Methods).ToList().ForEach(x => x.RemoveAttribute(NoCacheAttributeName));
+                    property.RemoveAttribute(CacheAttributeName);
+                    property.RemoveAttribute(NoCacheAttributeName);
+		        }
 
-			return definitions;
+		        type.RemoveAttribute(CacheAttributeName);
+		    }
 		}
+
+        private bool ShouldWeaveProperty(PropertyDefinition property)
+        {
+            bool hasClassLevelCache = property.DeclaringType.ContainsAttribute(CacheAttributeName);
+            bool hasPropertyLevelCache = property.ContainsAttribute(CacheAttributeName);
+            bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
+            bool isCacheGetter = property.Name == CacheGetterName;
+            bool isCompilerGenerated = property.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
+            
+            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isCompilerGenerated;
+        }
+
+	    private bool ShouldWeaveMethod(MethodDefinition method)
+	    {
+            bool hasClassLevelCache = method.DeclaringType.ContainsAttribute(CacheAttributeName);
+            bool hasMethodLevelCache = method.ContainsAttribute(CacheAttributeName);
+            bool hasNoCacheAttribute = method.ContainsAttribute(NoCacheAttributeName);
+	        bool isSpecialName = method.IsSpecialName || method.IsGetter || method.IsSetter || method.IsConstructor;
+	        bool isCompilerGenerated = method.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
+
+            return (hasClassLevelCache || hasMethodLevelCache) && !hasNoCacheAttribute && !isSpecialName && !isCompilerGenerated;
+	    }
 
 		private void WeaveMethod(MethodDefinition methodDefinition)
 		{
@@ -335,8 +362,7 @@ namespace MethodCache.Fody
 
 	    private void WeaveMethods()
 		{
-			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods(ModuleDefinition, CacheAttributeName,
-				NoCacheAttributeName);
+			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods();
 
 			foreach (MethodDefinition methodDefinition in methodDefinitions)
 			{

@@ -351,15 +351,63 @@
         }
 
         [Test]
-        public void CachedReadOnlyPropertyCacheAttributeRemoved()
+        public void CachedIndividualReadOnlyProperty()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(assembly, cache);
+
+            // Act
+            var value = instance.ReadOnlyProperty;
+            value = instance.ReadOnlyProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void CachedPropertiesClassLevelCacheAttributeRemoved()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(assembly, cache);
+            Type type = instance.GetType();
+
+            // Act
+            object[] customAttributes = type.GetCustomAttributes(true);
+
+            // Assert
+            Assert.IsEmpty(customAttributes);
+        }
+
+        [Test]
+        public void CachingNoCacheProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
+
+            // Act
+            var value = instance.ReadOnlyNoCache;
+            value = instance.ReadOnlyNoCache;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 0);
+            Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
+
+        [Test]
+        public void CachedPropertiesNoCacheAttributeRemoved()
         {
             // Arrange
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(assembly);
             var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(assembly, cache);
             Type type = instance.GetType();
+            PropertyInfo property = type.GetProperty("ReadOnlyNoCache");
 
             // Act
-            object[] customAttributes = type.GetCustomAttributes(true);
+            object[] customAttributes = property.GetCustomAttributes(true);
 
             // Assert
             Assert.IsEmpty(customAttributes);

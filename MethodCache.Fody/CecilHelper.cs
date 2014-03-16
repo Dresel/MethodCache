@@ -76,19 +76,14 @@
 			return instruction.Append(processor.Create(OpCodes.Stloc, index), processor);
 		}
 
-		public static bool ContainsAttribute(this MethodDefinition methodDefinition, MemberReference attributeType)
+        public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, MemberReference attributeType)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
 		}
 
-		public static bool ContainsAttribute(this MethodDefinition methodDefinition, string attributeTypeName)
+		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, string attributeTypeName)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
-		}
-
-		public static bool ContainsAttribute(this TypeDefinition typeDefinition, string attributeTypeName)
-		{
-			return typeDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
 		}
 
 		public static MethodDefinition GetInheritedPropertyGet(this TypeDefinition baseType, string propertyName)
@@ -226,18 +221,11 @@
 			return instructionBefore;
 		}
 
-		public static void RemoveAttribute(this MethodDefinition methodDefinition, string attributeTypeName)
+		public static void RemoveAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, string attributeTypeName)
 		{
 			methodDefinition.CustomAttributes.Where(x => x.Constructor.DeclaringType.Name == attributeTypeName)
 				.ToList()
 				.ForEach(x => methodDefinition.CustomAttributes.Remove(x));
-		}
-
-		public static void RemoveAttribute(this TypeDefinition typeDefinition, string attributeTypeName)
-		{
-			typeDefinition.CustomAttributes.Where(x => x.Constructor.DeclaringType.Name == attributeTypeName)
-				.ToList()
-				.ForEach(x => typeDefinition.CustomAttributes.Remove(x));
 		}
 	}
 }
