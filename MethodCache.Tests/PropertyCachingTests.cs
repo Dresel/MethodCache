@@ -41,7 +41,7 @@ namespace MethodCache.Tests
         }
 
         [Test]
-        public void ClassLevelCache_ShouldRemoveClassAttribute()
+        public void ClassLevelCache_ShouldRemoveClassCacheAttribute()
         {
             // Arrange
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
@@ -117,6 +117,22 @@ namespace MethodCache.Tests
             // Assert
             Assert.IsTrue(cache.NumStoreCalls == 0);
             Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldRemoveCacheAttributesFromAutoproperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+            Type type = instance.GetType();
+            PropertyInfo property = type.GetProperty("AutoProperty");
+
+            // Act
+            object[] customAttributes = property.GetCustomAttributes(true);
+
+            // Assert
+            Assert.IsEmpty(customAttributes);
         }
     }
 }
