@@ -72,6 +72,11 @@ DictionaryCache (in-memory implementation):
         {
             Storage[key] = data;
         }
+
+        public void Remove(string key)
+        {
+            Storage.Remove(key);
+        }
     }
 
 Now all the preparation is done and you can start with the real work. The classes you want to cache must contain an Cache Getter (can also be inherited from a baseclass). Let's start decorating ...
@@ -108,6 +113,23 @@ Now all the preparation is done and you can start with the real work. The classe
         {
             return x * x;
         }  
+		
+		public string AlsoWorksForProperties
+		{
+			get
+			{
+				return DoSomeCalculations();
+			}
+		}
+		
+		[NoCache]
+		public string AlsoPropertiesCanBeIgnored
+		{
+			get
+			{
+				return 10;
+			}
+		}
     }
     
     // or mark the methods you want to cache explicitly.
@@ -136,7 +158,16 @@ Now all the preparation is done and you can start with the real work. The classe
         public int ThirdMethod(int x)
         {
             return x * x;
-        }  
+        }   
+		
+		[Cache]
+		public string AlsoWorksForProperties
+		{
+			get
+			{
+				return DoSomeCalculations();
+			}
+		}
     }
 
 ... and let MethodCache do the rest.
@@ -154,6 +185,8 @@ For production I would suggest using some DI framework and creating an ICache in
         T Retrieve<T>(string key);
 
         void Store(string key, object data);
+		
+        void Remove(string key);
     }
     
     public class MyService
