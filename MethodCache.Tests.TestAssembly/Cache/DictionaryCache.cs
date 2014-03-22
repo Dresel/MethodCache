@@ -33,5 +33,10 @@
 
 			Storage[key] = data;
 		}
+
+	    public void Remove(string key)
+	    {
+	        Storage.Remove(key);
+	    }
 	}
 }

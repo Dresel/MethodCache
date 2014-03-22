@@ -134,5 +134,67 @@ namespace MethodCache.Tests
             // Assert
             Assert.IsEmpty(customAttributes);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldCacheReadWriteProperty()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.ReadWriteProperty;
+            value = instance.ReadWriteProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void IndividualCache_ShouldCacheReadWriteProperty()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.ReadWriteProperty;
+            value = instance.ReadWriteProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void ClassLevelCache_SettingPropertyShouldInvalidateCache()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.ReadWriteProperty;
+            instance.ReadWriteProperty = 10;
+
+            // Assert
+            Assert.That(cache.Contains("MethodCache.Tests.TestAssembly.TestClassWithProperties.ReadWriteProperty"), Is.False);
+        }
+
+        [Test]
+        public void IndividualCache_SettingPropertyShouldInvalidateCache()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.ReadWriteProperty;
+            instance.ReadWriteProperty = 10;
+
+            // Assert
+            Assert.That(cache.Contains("MethodCache.Tests.TestAssembly.TestClassIndividualProperties.ReadWriteProperty"), Is.False);
+        }
     }
 }

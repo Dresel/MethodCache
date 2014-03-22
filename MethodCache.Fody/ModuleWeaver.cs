@@ -1,11 +1,10 @@
-﻿using System.Text.RegularExpressions;
-
-namespace MethodCache.Fody
+﻿namespace MethodCache.Fody
 {
 	using System;
 	using System.Collections.Generic;
 	using System.Diagnostics;
 	using System.Linq;
+    using System.Text.RegularExpressions;
 	using System.Runtime.CompilerServices;
 	using System.Text;
 	using System.Xml.Linq;
@@ -23,7 +22,9 @@ namespace MethodCache.Fody
 
 		public const string CacheTypeRetrieveMethodName = "Retrieve";
 
-		public const string CacheTypeStoreMethodName = "Store";
+        public const string CacheTypeStoreMethodName = "Store";
+
+        public const string CacheTypeRemoveMethodName = "Remove";
 
 		public const string NoCacheAttributeName = "NoCacheAttribute";
 
@@ -69,7 +70,9 @@ namespace MethodCache.Fody
 				LogDebugOutput = false;
 			}
 
-			WeaveMethods();
+            MethodsForWeaving methodToWeave = SelectMethods();
+            WeaveMethods(methodToWeave.Methods);
+            WeavePropertySetters(methodToWeave.PropertySetters);
 
 			RemoveReference();
 		}
@@ -94,6 +97,13 @@ namespace MethodCache.Fody
 				(cacheInterface.GetMethod(cacheTypeStoreMethodName, cacheInterface.Module.ImportType(typeof(void)),
 					new[] { cacheInterface.Module.ImportType<string>(), cacheInterface.Module.ImportType<object>() }));
 		}
+
+        private MethodDefinition CacheTypeGetRemoveMethod(TypeDefinition cacheType, string cacheTypeRemoveMethodName)
+        {
+            return
+                (cacheType.GetMethod(cacheTypeRemoveMethodName, ModuleDefinition.TypeSystem.Void,
+                    new[] { cacheType.Module.ImportType<string>() }));
+        }
 
 		private bool CheckCacheTypeMethods(TypeDefinition cacheType)
 		{
@@ -143,36 +153,40 @@ namespace MethodCache.Fody
 			LogInfo("Removing reference to 'MethodCache.Attributes.dll'.");
 		}
 
-		private IEnumerable<MethodDefinition> SelectMethods()
+        private MethodsForWeaving SelectMethods()
 		{
-			LogInfo(string.Format("Searching for Methods and Properties in assembly ({0}).", ModuleDefinition.Name));
+            LogInfo(string.Format("Searching for Methods and Properties in assembly ({0}).", ModuleDefinition.Name));
 
-		    foreach (var type in ModuleDefinition.Types)
-		    {
-		        foreach (var method in type.Methods)
-		        {
-		            if (ShouldWeaveMethod(method))
-		            {
-		                yield return method;
-		            }
+            MethodsForWeaving result = new MethodsForWeaving();
+
+            foreach (var type in ModuleDefinition.Types)
+            {
+                foreach (var method in type.Methods)
+                {
+                    if (ShouldWeaveMethod(method))
+                    {
+                        result.Add(method);
+                    }
 
                     method.RemoveAttribute(CacheAttributeName);
                     method.RemoveAttribute(NoCacheAttributeName);
-		        }
+                }
 
-		        foreach (var property in type.Properties)
-		        {
+                foreach (var property in type.Properties)
+                {
                     if (ShouldWeaveProperty(property))
                     {
-                        yield return property.GetMethod;
+                        result.Add(property);
                     }
 
                     property.RemoveAttribute(CacheAttributeName);
                     property.RemoveAttribute(NoCacheAttributeName);
-		        }
+                }
 
-		        type.RemoveAttribute(CacheAttributeName);
-		    }
+                type.RemoveAttribute(CacheAttributeName);
+            }
+
+            return result;
 		}
 
         private bool ShouldWeaveProperty(PropertyDefinition property)
@@ -198,7 +212,7 @@ namespace MethodCache.Fody
             return (hasClassLevelCache || hasMethodLevelCache) && !hasNoCacheAttribute && !isSpecialName && !isCompilerGenerated;
 	    }
 
-		private void WeaveMethod(MethodDefinition methodDefinition)
+        private void WeaveMethod(MethodDefinition methodDefinition, MethodDefinition propertyGet)
 		{
 			methodDefinition.Body.InitLocals = true;
 
@@ -253,24 +267,7 @@ namespace MethodCache.Fody
 							methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
 					.AppendStloc(processor, cacheKeyIndex);
 
-			if (LogDebugOutput)
-			{
-				// Call Debug.WriteLine with CacheKey
-				current =
-					current.AppendLdstr(processor, "CacheKey created: {0}")
-						.AppendLdloc(processor, cacheKeyIndex)
-						.Append(
-							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object) })), processor)
-						.Append(
-							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })), processor);
-			}
-
-			// Cache Getter
-			MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
-			propertyGet = propertyGet ??
-				methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+            current = InjectCacheKeyCreatedCode(methodDefinition, current, processor, cacheKeyIndex);
 
 			TypeDefinition propertyGetReturnTypeDefinition = propertyGet.ReturnType.Resolve();
 
@@ -352,62 +349,175 @@ namespace MethodCache.Fody
             else
             {
                 builder.Append(methodDefinition.Name);
+                for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+                {
+                    builder.Append(string.Format("_{{{0}}}", i));
+                }
             }
 
-	        for (int i = 0; i < methodDefinition.Parameters.Count; i++)
-	        {
-	            builder.Append(string.Format("_{{{0}}}", i));
-	        }
             return builder.ToString();
-	    }
+        }
 
-	    private void WeaveMethods()
-		{
-			IEnumerable<MethodDefinition> methodDefinitions = SelectMethods();
+        private void WeaveMethods(IEnumerable<MethodDefinition> methodDefinitions)
+        {
+            foreach (MethodDefinition methodDefinition in methodDefinitions)
+            {
+                MethodDefinition propertyGet = GetCacheGetter(methodDefinition);
 
-			foreach (MethodDefinition methodDefinition in methodDefinitions)
-			{
-				MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
-				propertyGet = propertyGet ??
-					methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+                if (!IsMethodValidForWeaving(propertyGet, methodDefinition))
+                {
+                    continue;
+                }
 
-				LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
+                if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
+                {
+                    LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
 
-				if (propertyGet == null)
-				{
-					LogWarning(string.Format("Class {0} does not contain or inherit Getter {1}. Skip weaving of method {2}.",
-						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+                    continue;
+                }
 
-					continue;
-				}
+                LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
 
-				if (methodDefinition.IsStatic && !propertyGet.IsStatic)
-				{
-					LogWarning(string.Format("Method {2} of Class {0} is static, Getter {1} is not. Skip weaving of method {2}.",
-						methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+                WeaveMethod(methodDefinition, propertyGet);
+            }
+        }
 
-					continue;
-				}
+        private void WeavePropertySetters(IEnumerable<MethodDefinition> propertySetters)
+        {
+            foreach (var setter in propertySetters)
+            {
+                MethodDefinition propertyGet = GetCacheGetter(setter);
 
-				if (!CheckCacheTypeMethods(propertyGet.ReturnType.Resolve()))
-				{
-					LogWarning(
-						string.Format(
-							"ReturnType {0} of Getter {1} of Class {2} does not implement all methods. Skip weaving of method {3}.",
-							propertyGet.ReturnType.Name, CacheGetterName, methodDefinition.DeclaringType.Name, methodDefinition.Name));
+                if (!IsMethodValidForWeaving(propertyGet, setter))
+                {
+                    continue;
+                }
 
-					continue;
-				}
+                LogInfo(string.Format("Weaving method {0}::{1}.", setter.DeclaringType.Name, setter.Name));
+                WeavePropertySetter(setter, propertyGet);
+            }
+        }
 
-				if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
-				{
-					LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
+        private void WeavePropertySetter(MethodDefinition setter, MethodDefinition propertyGet)
+        {
+            setter.Body.InitLocals = true;
+            setter.Body.SimplifyMacros();
+            Instruction firstInstruction = setter.Body.Instructions.First();
+            ILProcessor processor = setter.Body.GetILProcessor();
 
-					continue;
-				}
+            // Add local variables
+            int cacheKeyIndex = setter.AddVariable<string>();
+            int objectArrayIndex = setter.AddVariable<object[]>();
 
-				WeaveMethod(methodDefinition);
-			}
-		}
+            // Generate CacheKeyTemplate
+            var cacheKey = CreateCacheKeyString(setter);
+
+            Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, cacheKey), processor);
+
+            // Create object[] for string.format
+            current =
+                current.AppendLdcI4(processor, 0)
+                       .Append(processor.Create(OpCodes.Newarr, setter.Module.ImportType<object>()), processor)
+                       .AppendStloc(processor, objectArrayIndex);
+
+            // Call string.format
+            current =
+                current.AppendLdloc(processor, objectArrayIndex)
+                       .Append(processor.Create(OpCodes.Call,
+                                                             setter.Module.ImportMethod<string>("Format",
+                                                                                                            new[]
+	                                                                                                            {
+	                                                                                                                typeof (string), typeof (object[])
+	                                                                                                            })), processor)
+                       .AppendStloc(processor, cacheKeyIndex);
+
+            current = InjectCacheKeyCreatedCode(setter, current, processor, cacheKeyIndex);
+
+            if (LogDebugOutput)
+            {
+                current = current.AppendDebugWrite(processor, "Clearing cache.", ModuleDefinition);
+            }
+            if (!setter.IsStatic)
+            {
+                current = current.AppendLdarg(processor, 0);
+            }
+
+            current.Append(processor.Create(OpCodes.Call, setter.Module.Import(propertyGet)), processor)
+                .AppendLdloc(processor, cacheKeyIndex)
+                .Append(
+                    processor.Create(OpCodes.Callvirt,
+                        setter.Module.Import(CacheTypeGetRemoveMethod(propertyGet.ReturnType.Resolve(), CacheTypeRemoveMethodName))),
+                    processor);
+
+            setter.Body.OptimizeMacros();
+        }
+
+        private Instruction InjectCacheKeyCreatedCode(
+           MethodDefinition methodDefinition,
+           Instruction current,
+           ILProcessor processor,
+           int cacheKeyIndex)
+        {
+            if (LogDebugOutput)
+            {
+                // Call Debug.WriteLine with CacheKey
+                current =
+                    current.AppendLdstr(processor, "CacheKey created: {0}")
+                           .AppendLdloc(processor, cacheKeyIndex)
+                           .Append(
+                               processor.Create(OpCodes.Call,
+                                                methodDefinition.Module.ImportMethod<string>("Format",
+                                                                                             new[]
+	                                                                                             {
+	                                                                                                 typeof (string),
+	                                                                                                 typeof (object)
+	                                                                                             })),
+                               processor)
+                           .Append(
+                               processor.Create(OpCodes.Call,
+                                                methodDefinition.Module.ImportMethod(typeof(Debug), "WriteLine",
+                                                                                     new[] { typeof(string) })), processor);
+            }
+            return current;
+        }
+
+        private bool IsMethodValidForWeaving(MethodDefinition propertyGet, MethodDefinition methodDefinition)
+        {
+            if (propertyGet == null)
+            {
+                LogWarning(string.Format("Class {0} does not contain or inherit Getter {1}. Skip weaving of method {2}.",
+                    methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+
+                return false;
+            }
+
+            if (methodDefinition.IsStatic && !propertyGet.IsStatic)
+            {
+                LogWarning(string.Format("Method {2} of Class {0} is static, Getter {1} is not. Skip weaving of method {2}.",
+                    methodDefinition.DeclaringType.Name, CacheGetterName, methodDefinition.Name));
+
+                return false;
+            }
+
+            if (!CheckCacheTypeMethods(propertyGet.ReturnType.Resolve()))
+            {
+                LogWarning(
+                    string.Format(
+                        "ReturnType {0} of Getter {1} of Class {2} does not implement all methods. Skip weaving of method {3}.",
+                        propertyGet.ReturnType.Name, CacheGetterName, methodDefinition.DeclaringType.Name, methodDefinition.Name));
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private static MethodDefinition GetCacheGetter(MethodDefinition methodDefinition)
+        {
+            MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
+            propertyGet = propertyGet ??
+                          methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+            return propertyGet;
+        }
 	}
 }

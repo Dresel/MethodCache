@@ -6,6 +6,8 @@
 	[Cache]
 	public class TestClassWithProperties
 	{
+	    private int _someValue;
+
 	    public TestClassWithProperties(ICache cache)
 	    {
 	        Cache = cache;
@@ -25,5 +27,11 @@
 	    }
 
         public int AutoProperty { get; set; }
+
+	    public int ReadWriteProperty
+	    {
+            get { return _someValue; }
+	        set { _someValue = value; }
+	    }
 	}
 }
