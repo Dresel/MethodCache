@@ -122,14 +122,21 @@
 				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeStoreMethodName, cacheType.FullName));
 
 				return false;
-			}
+            }
 
-			if ((CacheTypeGetRetrieveMethod(cacheType, CacheTypeRetrieveMethodName)) == null)
-			{
-				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRetrieveMethodName, cacheType.FullName));
+            if ((CacheTypeGetRetrieveMethod(cacheType, CacheTypeRetrieveMethodName)) == null)
+            {
+                LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRetrieveMethodName, cacheType.FullName));
 
-				return false;
-			}
+                return false;
+            }
+
+            if ((CacheTypeGetRemoveMethod(cacheType, CacheTypeRemoveMethodName)) == null)
+            {
+                LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRemoveMethodName, cacheType.FullName));
+
+                return false;
+            }
 
 			LogInfo(string.Format("CacheInterface methods found."));
 
