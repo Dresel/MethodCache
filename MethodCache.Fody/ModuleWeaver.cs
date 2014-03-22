@@ -245,34 +245,11 @@
 			ILProcessor processor = methodDefinition.Body.GetILProcessor();
 
 			// Generate CacheKeyTemplate
-			var builder = CreateCacheKeyString(methodDefinition);
+			var cacheKey = CreateCacheKeyString(methodDefinition);
 
-		    Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, builder), processor);
+		    Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, cacheKey), processor);
 
-			// Create object[] for string.format
-			current =
-				current.AppendLdcI4(processor, methodDefinition.Parameters.Count)
-					.Append(processor.Create(OpCodes.Newarr, methodDefinition.Module.ImportType<object>()), processor)
-					.AppendStloc(processor, objectArrayIndex);
-
-			// Set object[] values
-			for (int i = 0; i < methodDefinition.Parameters.Count; i++)
-			{
-				current =
-					current.AppendLdloc(processor, objectArrayIndex)
-						.AppendLdcI4(processor, i)
-						.AppendLdarg(processor, (!methodDefinition.IsStatic ? i + 1 : i))
-						.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
-						.Append(processor.Create(OpCodes.Stelem_Ref), processor);
-			}
-
-			// Call string.format
-			current =
-				current.AppendLdloc(processor, objectArrayIndex)
-					.Append(
-						processor.Create(OpCodes.Call,
-							methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
-					.AppendStloc(processor, cacheKeyIndex);
+            current = SetCacheKeyLocalVariable(current, methodDefinition, processor, cacheKey, cacheKeyIndex, objectArrayIndex);
 
             current = InjectCacheKeyCreatedCode(methodDefinition, current, processor, cacheKeyIndex);
 
@@ -414,29 +391,14 @@
 
             // Add local variables
             int cacheKeyIndex = setter.AddVariable<string>();
-            int objectArrayIndex = setter.AddVariable<object[]>();
 
             // Generate CacheKeyTemplate
             var cacheKey = CreateCacheKeyString(setter);
 
             Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, cacheKey), processor);
 
-            // Create object[] for string.format
-            current =
-                current.AppendLdcI4(processor, 0)
-                       .Append(processor.Create(OpCodes.Newarr, setter.Module.ImportType<object>()), processor)
-                       .AppendStloc(processor, objectArrayIndex);
-
-            // Call string.format
-            current =
-                current.AppendLdloc(processor, objectArrayIndex)
-                       .Append(processor.Create(OpCodes.Call,
-                                                             setter.Module.ImportMethod<string>("Format",
-                                                                                                            new[]
-	                                                                                                            {
-	                                                                                                                typeof (string), typeof (object[])
-	                                                                                                            })), processor)
-                       .AppendStloc(processor, cacheKeyIndex);
+            // Create set cache key
+            current = current.AppendStloc(processor, cacheKeyIndex);
 
             current = InjectCacheKeyCreatedCode(setter, current, processor, cacheKeyIndex);
 
@@ -525,6 +487,42 @@
             propertyGet = propertyGet ??
                           methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
             return propertyGet;
+        }
+
+        private Instruction SetCacheKeyLocalVariable(
+            Instruction current, MethodDefinition methodDefinition, ILProcessor processor, string cacheKey, int cacheKeyIndex, int objectArrayIndex)
+        {
+            if (methodDefinition.IsSetter || methodDefinition.IsGetter)
+            {
+                return current.AppendStloc(processor, cacheKeyIndex);
+            }
+            else
+            {
+                // Create object[] for string.format
+                current =
+                    current.AppendLdcI4(processor, methodDefinition.Parameters.Count)
+                        .Append(processor.Create(OpCodes.Newarr, methodDefinition.Module.ImportType<object>()), processor)
+                        .AppendStloc(processor, objectArrayIndex);
+
+                // Set object[] values
+                for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+                {
+                    current =
+                        current.AppendLdloc(processor, objectArrayIndex)
+                            .AppendLdcI4(processor, i)
+                            .AppendLdarg(processor, (!methodDefinition.IsStatic ? i + 1 : i))
+                            .AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
+                            .Append(processor.Create(OpCodes.Stelem_Ref), processor);
+                }
+
+                // Call string.format
+                return
+                    current.AppendLdloc(processor, objectArrayIndex)
+                        .Append(
+                            processor.Create(OpCodes.Call,
+                                methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
+                        .AppendStloc(processor, cacheKeyIndex);
+            }
         }
 	}
 }
