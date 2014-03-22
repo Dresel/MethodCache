@@ -15,6 +15,18 @@ There is a nuget package avaliable here http://nuget.org/packages/MethodCache.Fo
     {
         return a + b;
     }
+	
+	public string AlsoWorksForProperties
+	{
+		get
+		{
+			return DoSomeCalculations(this.parameterField);
+		}
+		set
+		{
+			this.parameterField = value;
+		}
+	}
 
 ## What gets compiled
 
@@ -33,6 +45,31 @@ There is a nuget package avaliable here http://nuget.org/packages/MethodCache.Fo
         
         return result;
     }
+	
+	public object AlsoWorksForProperties
+	{
+		get
+		{
+			string cacheKey = "Namespace.Class.AlsoWorksForProperties";
+		
+			if(Cache.Contains(cacheKey))
+			{
+				return Cache.Retrieve<int>(cacheKey);
+			}
+		
+			object result = DoSomeCalculations(this.parameterField);
+			
+			Cache.Store(cacheKey, result);
+			
+			return result;
+		}
+		set
+		{
+			string cacheKey = "Namespace.Class.AlsoWorksForProperties";
+			Cache.Remove(cacheKey);
+			this.parameterField = value;
+		}
+	}
 
 # How to use
 
