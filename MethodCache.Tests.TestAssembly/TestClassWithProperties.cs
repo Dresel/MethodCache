@@ -23,5 +23,7 @@
 	    {
 	        get { return "no cache value"; }
 	    }
+
+        public int AutoProperty { get; set; }
 	}
 }

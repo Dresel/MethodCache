@@ -181,9 +181,10 @@ namespace MethodCache.Fody
             bool hasPropertyLevelCache = property.ContainsAttribute(CacheAttributeName);
             bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
             bool isCacheGetter = property.Name == CacheGetterName;
-            bool isCompilerGenerated = property.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
+            bool isAutoProperty = property.GetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>())
+                               && property.SetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
             
-            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isCompilerGenerated;
+            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isAutoProperty;
         }
 
 	    private bool ShouldWeaveMethod(MethodDefinition method)

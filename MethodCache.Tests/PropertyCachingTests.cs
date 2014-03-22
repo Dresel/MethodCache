@@ -86,5 +86,37 @@ namespace MethodCache.Tests
             // Assert
             Assert.IsEmpty(customAttributes);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldNotCacheAutoproperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.AutoProperty;
+            value = instance.AutoProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 0);
+            Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
+
+        [Test]
+        public void IndividualCache_ShouldNotCacheAutoproperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(Assembly, cache);
+
+            // Act
+            var value = instance.AutoProperty;
+            value = instance.AutoProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 0);
+            Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
     }
 }

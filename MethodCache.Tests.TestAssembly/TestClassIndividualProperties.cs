@@ -16,6 +16,9 @@ namespace MethodCache.Tests.TestAssembly
 	    public string ReadOnlyProperty
 	    {
             get { return "some value"; }
-	    } 
+	    }
+
+        [Cache]
+        public int AutoProperty { get; set; }
     }
 }
