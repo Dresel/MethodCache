@@ -2,7 +2,7 @@
 {
 	using System.Collections.Generic;
 
-	public class DictionaryCache : ICache
+	public class DictionaryCache : ICache, ICacheWithRemove
 	{
 		public int NumRetrieveCalls { get; private set; }
 

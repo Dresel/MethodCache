@@ -8,12 +8,12 @@ namespace MethodCache.Tests.TestAssembly
         private int _someValue;
         private string _field;
 
-        public TestClassIndividualProperties(ICache cache)
+        public TestClassIndividualProperties(ICacheWithRemove cache)
 	    {
 	        Cache = cache;
 	    }
 
-	    public ICache Cache { get; private set; }
+        public ICacheWithRemove Cache { get; private set; }
 
         [Cache]
 	    public string ReadOnlyProperty

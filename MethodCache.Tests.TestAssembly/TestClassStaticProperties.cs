@@ -8,7 +8,7 @@
 	{
 	    private static int _someValue;
 
-	    public static ICache Cache { get; set; }
+	    public static ICacheWithRemove Cache { get; set; }
 
 	    public static string ReadOnlyProperty
 	    {

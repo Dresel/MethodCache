@@ -9,12 +9,12 @@
 	    private int _someValue;
 	    private string _field;
 
-	    public TestClassWithProperties(ICache cache)
+        public TestClassWithProperties(ICacheWithRemove cache)
 	    {
 	        Cache = cache;
 	    }
 
-	    public ICache Cache { get; private set; }
+	    public ICacheWithRemove Cache { get; private set; }
 
 	    public string ReadOnlyProperty
 	    {

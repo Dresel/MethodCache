@@ -133,13 +133,6 @@ namespace MethodCache.Fody
                 return false;
             }
 
-            if ((CacheTypeGetRemoveMethod(cacheType, CacheTypeRemoveMethodName)) == null)
-            {
-                LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRemoveMethodName, cacheType.FullName));
-
-                return false;
-            }
-
 			LogInfo(string.Format("CacheInterface methods found."));
 
 			return true;
@@ -403,7 +396,7 @@ namespace MethodCache.Fody
             {
                 MethodDefinition propertyGet = GetCacheGetter(setter);
 
-                if (!IsMethodValidForWeaving(propertyGet, setter))
+                if (!IsPropertySetterValidForWeaving(propertyGet, setter))
                 {
                     continue;
                 }
@@ -479,6 +472,23 @@ namespace MethodCache.Fody
                                                                                      new[] { typeof(string) })), processor);
             }
             return current;
+        }
+
+        private bool IsPropertySetterValidForWeaving(MethodDefinition propertyGet, MethodDefinition methodDefinition)
+        {
+            if (!IsMethodValidForWeaving(propertyGet, methodDefinition))
+            {
+                return false;
+            }
+
+            if ((CacheTypeGetRemoveMethod(propertyGet.ReturnType.Resolve(), CacheTypeRemoveMethodName)) == null)
+            {
+                LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRemoveMethodName, propertyGet.ReturnType.Resolve().FullName));
+
+                return false;
+            }
+
+            return true;
         }
 
         private bool IsMethodValidForWeaving(MethodDefinition propertyGet, MethodDefinition methodDefinition)
