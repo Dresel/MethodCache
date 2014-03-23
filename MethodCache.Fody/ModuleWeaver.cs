@@ -30,6 +30,10 @@ namespace MethodCache.Fody
 
 		public const string NoCacheAttributeName = "NoCacheAttribute";
 
+        private bool _propertyCacheEnabled = true;
+        
+        private bool _methodCacheEnabled = true;
+
 		public IAssemblyResolver AssemblyResolver { get; set; }
 
 		public XElement Config { get; set; }
@@ -66,11 +70,7 @@ namespace MethodCache.Fody
 		{
 			LogDebugOutput = DefineConstants.Any(x => x.ToLower() == "debug");
 
-			if (Config.Attributes().Any(x => x.Name.ToString().ToLower() == "skipdebugoutput" && x.Value.ToLower() == "true"))
-			{
-				LogWarning("Skipping Debug Output.");
-				LogDebugOutput = false;
-			}
+            ReadConfiguration();
 
             MethodsForWeaving methodToWeave = SelectMethods();
             WeaveMethods(methodToWeave.Methods);
@@ -78,6 +78,34 @@ namespace MethodCache.Fody
 
 			RemoveReference();
 		}
+
+        private void ReadConfiguration()
+        {
+            if (ConfigHasAttribute("SkipDebugOutput", "true"))
+            {
+                LogWarning("Skipping Debug Output.");
+                LogDebugOutput = false;
+            }
+
+            if (ConfigHasAttribute("CacheProperties", "false"))
+            {
+                LogWarning("Disabling property weaving.");
+                _propertyCacheEnabled = false;
+            }
+
+            if (ConfigHasAttribute("CacheMethods", "false"))
+            {
+                LogWarning("Disabling method weaving.");
+                _methodCacheEnabled = false;
+            }
+        }
+
+        private bool ConfigHasAttribute(string name, string value)
+        {
+            return
+                Config.Attributes()
+                      .Any(x => x.Name.ToString().ToLower() == name.ToLower() && x.Value.ToLower() == value.ToLower());
+        }
 
 		private MethodDefinition CacheTypeGetContainsMethod(TypeDefinition cacheType, string cacheTypeContainsMethodName)
 		{
@@ -165,7 +193,7 @@ namespace MethodCache.Fody
             {
                 foreach (var method in type.Methods)
                 {
-                    if (ShouldWeaveMethod(method))
+                    if (_methodCacheEnabled && ShouldWeaveMethod(method))
                     {
                         result.Add(method);
                     }
@@ -176,7 +204,7 @@ namespace MethodCache.Fody
 
                 foreach (var property in type.Properties)
                 {
-                    if (ShouldWeaveProperty(property))
+                    if (_propertyCacheEnabled && ShouldWeaveProperty(property))
                     {
                         result.Add(property);
                     }
