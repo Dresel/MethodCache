@@ -1,5 +1,7 @@
 ﻿namespace MethodCache.Tests
 {
+    using System;
+    using System.Reflection;
     using System.Xml.Linq;
     using MethodCache.Tests.TestAssembly;
     using MethodCache.Tests.TestAssembly.Cache;
@@ -53,6 +55,52 @@
             value = instance.AutoProperty;
             value = instance.ReadWriteProperty;
             value = instance.ReadWriteProperty;
+
+            // Assert
+            Assert.That(cache.NumStoreCalls, Is.EqualTo(0));
+            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldNotCacheStaticReadOnlyProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+
+            Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICacheWithRemove).FullName);
+
+            PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
+            cacheProperty.SetValue(null, cache, null);
+
+            PropertyInfo property = testClassType.GetProperty("ReadOnlyProperty");
+
+            // Act
+            var value = property.GetValue(null, null);
+            value = property.GetValue(null, null);
+
+            // Assert
+            Assert.That(cache.NumStoreCalls, Is.EqualTo(0));
+            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldNotCacheStaticReadWriteProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+
+            Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICacheWithRemove).FullName);
+
+            PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
+            cacheProperty.SetValue(null, cache, null);
+
+            PropertyInfo property = testClassType.GetProperty("ReadWriteProperty");
+
+            // Act
+            var value = property.GetValue(null, null);
+            value = property.GetValue(null, null);
 
             // Assert
             Assert.That(cache.NumStoreCalls, Is.EqualTo(0));
