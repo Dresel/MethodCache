@@ -264,5 +264,21 @@ namespace MethodCache.Tests
             // Assert
             Assert.That(cache.Contains("MethodCache.Tests.TestAssembly.TestClassStaticProperties.ReadWriteProperty"), Is.False);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldBePossibleToDisablePropertyWeaving()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassPropertiesExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.ReadOnlyProperty;
+            value = instance.ReadOnlyProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 0);
+            Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
     }
 }

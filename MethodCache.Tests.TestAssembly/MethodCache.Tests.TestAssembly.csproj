@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Cache\DictionaryCache.cs" />
     <Compile Include="Cache\ICache.cs" />
+    <Compile Include="TestClassPropertiesExcluded.cs" />
     <Compile Include="TestClassStaticProperties.cs" />
     <Compile Include="TestClassIndividualProperties.cs" />
     <Compile Include="TestClassWithProperties.cs" />
