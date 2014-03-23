@@ -6,7 +6,9 @@
 	{
 		public int NumRetrieveCalls { get; private set; }
 
-		public int NumStoreCalls { get; private set; }
+        public int NumStoreCalls { get; private set; }
+
+        public int NumRemoveCalls { get; private set; }
 
 		private Dictionary<string, object> Storage { get; set; }
 
@@ -36,6 +38,8 @@
 
 	    public void Remove(string key)
 	    {
+	        NumRemoveCalls++;
+
 	        Storage.Remove(key);
 	    }
 	}

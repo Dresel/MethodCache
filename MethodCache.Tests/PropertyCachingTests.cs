@@ -312,5 +312,33 @@ namespace MethodCache.Tests
             Assert.IsTrue(cache.NumStoreCalls == 1);
             Assert.IsTrue(cache.NumRetrieveCalls == 1);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldNotWeaveWriteOnlyProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+
+            // Act
+            instance.SetOnlyProperty = "some text";
+
+            // Assert
+            Assert.That(cache.NumRemoveCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void IndividualCache_ShouldNeverWeaveWriteOnlyProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassIndividualProperties>(Assembly, cache);
+
+            // Act
+            instance.SetOnlyProperty = "some text";
+
+            // Assert
+            Assert.That(cache.NumRemoveCalls, Is.EqualTo(0));
+        }
     }
 }

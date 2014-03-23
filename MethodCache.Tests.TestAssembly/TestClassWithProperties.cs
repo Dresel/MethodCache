@@ -7,6 +7,7 @@
 	public class TestClassWithProperties
 	{
 	    private int _someValue;
+	    private string _field;
 
 	    public TestClassWithProperties(ICache cache)
 	    {
@@ -32,6 +33,11 @@
 	    {
             get { return _someValue; }
 	        set { _someValue = value; }
+	    }
+
+	    public string SetOnlyProperty
+	    {
+	        set { _field = value; }
 	    }
 	}
 }

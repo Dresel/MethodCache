@@ -207,10 +207,13 @@ namespace MethodCache.Fody
             bool hasPropertyLevelCache = property.ContainsAttribute(CacheAttributeName);
             bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
             bool isCacheGetter = property.Name == CacheGetterName;
-            bool isAutoProperty = property.GetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>())
+            bool hasGetAccessor = property.GetMethod != null;
+            bool hasSetAccessor = property.GetMethod != null;
+            bool isAutoProperty = hasGetAccessor && hasSetAccessor 
+                               && property.GetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>())
                                && property.SetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
-            
-            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isAutoProperty;
+
+            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isAutoProperty && hasGetAccessor;
         }
 
 	    private bool ShouldWeaveMethod(MethodDefinition method)
