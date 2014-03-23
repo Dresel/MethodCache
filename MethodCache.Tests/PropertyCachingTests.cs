@@ -204,7 +204,7 @@ namespace MethodCache.Tests
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
 
             Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
-            Type cacheType = Assembly.GetType(typeof(ICache).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICacheWithRemove).FullName);
 
             PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
             cacheProperty.SetValue(null, cache, null);
@@ -227,7 +227,7 @@ namespace MethodCache.Tests
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
 
             Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
-            Type cacheType = Assembly.GetType(typeof(ICache).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICacheWithRemove).FullName);
 
             PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
             cacheProperty.SetValue(null, cache, null);
