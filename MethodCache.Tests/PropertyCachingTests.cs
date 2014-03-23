@@ -196,5 +196,73 @@ namespace MethodCache.Tests
             // Assert
             Assert.That(cache.Contains("MethodCache.Tests.TestAssembly.TestClassIndividualProperties.ReadWriteProperty"), Is.False);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldCacheStaticReadOnlyProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+
+            Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICache).FullName);
+
+            PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
+            cacheProperty.SetValue(null, cache, null);
+
+            PropertyInfo property = testClassType.GetProperty("ReadOnlyProperty");
+
+            // Act
+            var value = property.GetValue(null, null);
+            value = property.GetValue(null, null);
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldCacheStaticReadWriteProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+
+            Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICache).FullName);
+
+            PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
+            cacheProperty.SetValue(null, cache, null);
+
+            PropertyInfo property = testClassType.GetProperty("ReadWriteProperty");
+
+            // Act
+            var value = property.GetValue(null, null);
+            value = property.GetValue(null, null);
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldInvalidateCacheWhenSettingReadWriteProperties()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+
+            Type testClassType = Assembly.GetType(typeof(TestClassStaticProperties).FullName);
+            Type cacheType = Assembly.GetType(typeof(ICache).FullName);
+
+            PropertyInfo cacheProperty = testClassType.GetProperty("Cache", cacheType);
+            cacheProperty.SetValue(null, cache, null);
+
+            PropertyInfo property = testClassType.GetProperty("ReadWriteProperty");
+
+            // Act
+            property.GetValue(null, null);
+            property.SetValue(null, 5, null);
+
+            // Assert
+            Assert.That(cache.Contains("MethodCache.Tests.TestAssembly.TestClassStaticProperties.ReadWriteProperty"), Is.False);
+        }
     }
 }
