@@ -30,9 +30,9 @@ namespace MethodCache.Fody
 
 		public const string NoCacheAttributeName = "NoCacheAttribute";
 
-        private bool _propertyCacheEnabled = true;
+        private bool _propertyCacheEnabledByDefault = true;
         
-        private bool _methodCacheEnabled = true;
+        private bool _methodCacheEnabledByDefault = true;
 
 		public IAssemblyResolver AssemblyResolver { get; set; }
 
@@ -90,13 +90,13 @@ namespace MethodCache.Fody
             if (ConfigHasAttribute("CacheProperties", "false"))
             {
                 LogWarning("Disabling property weaving.");
-                _propertyCacheEnabled = false;
+                _propertyCacheEnabledByDefault = false;
             }
 
             if (ConfigHasAttribute("CacheMethods", "false"))
             {
                 LogWarning("Disabling method weaving.");
-                _methodCacheEnabled = false;
+                _methodCacheEnabledByDefault = false;
             }
         }
 
@@ -193,7 +193,7 @@ namespace MethodCache.Fody
             {
                 foreach (var method in type.Methods)
                 {
-                    if (_methodCacheEnabled && ShouldWeaveMethod(method))
+                    if (ShouldWeaveMethod(method))
                     {
                         result.Add(method);
                     }
@@ -204,7 +204,7 @@ namespace MethodCache.Fody
 
                 foreach (var property in type.Properties)
                 {
-                    if (_propertyCacheEnabled && ShouldWeaveProperty(property))
+                    if (ShouldWeaveProperty(property))
                     {
                         result.Add(property);
                     }
@@ -224,7 +224,7 @@ namespace MethodCache.Fody
             CustomAttribute classLevelCacheAttribute =
                 property.DeclaringType.CustomAttributes.SingleOrDefault(x => x.Constructor.DeclaringType.Name == CacheAttributeName);
 
-            bool hasClassLevelCache = classLevelCacheAttribute != null && !CacheAttributeExcludesProperties(classLevelCacheAttribute);
+            bool hasClassLevelCache = classLevelCacheAttribute != null;
             bool hasPropertyLevelCache = property.ContainsAttribute(CacheAttributeName);
             bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
             bool isCacheGetter = property.Name == CacheGetterName;
@@ -234,7 +234,25 @@ namespace MethodCache.Fody
                                && property.GetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>())
                                && property.SetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
 
-            return (hasClassLevelCache || hasPropertyLevelCache) && !hasNoCacheAttribute && !isCacheGetter && !isAutoProperty && hasGetAccessor;
+            if (hasNoCacheAttribute || isCacheGetter || isAutoProperty || !hasGetAccessor)
+            {
+                // never weave Cache property, auto-properties, write-only properties and properties explicitly excluded 
+                return false;
+            }
+
+            if (hasPropertyLevelCache)
+            {
+                // always weave properties explicitly marked for cache
+                return true;
+            }
+
+            if (hasClassLevelCache && !CacheAttributeExcludesProperties(classLevelCacheAttribute))
+            {
+                // otherwise weave if marked at class level
+                return _propertyCacheEnabledByDefault || CacheAttributeMembersExplicitly(classLevelCacheAttribute, Members.Properties);
+            }
+
+            return false;
         }
 
 	    private bool ShouldWeaveMethod(MethodDefinition method)
@@ -248,8 +266,38 @@ namespace MethodCache.Fody
 	        bool isSpecialName = method.IsSpecialName || method.IsGetter || method.IsSetter || method.IsConstructor;
 	        bool isCompilerGenerated = method.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
 
-            return (hasClassLevelCache || hasMethodLevelCache) && !hasNoCacheAttribute && !isSpecialName && !isCompilerGenerated;
-	    }
+            if (hasNoCacheAttribute || isSpecialName || isCompilerGenerated)
+            {
+                // never weave property accessors, special methods and compiler generated methods
+                return false;
+            }
+
+            if (hasMethodLevelCache)
+            {
+                // always weave methods explicitly marked for cache
+                return true;
+            }
+
+            if (hasClassLevelCache && !CacheAttributeExcludesMethods(classLevelCacheAttribute))
+            {
+                // otherwise weave if marked at class level
+                return _methodCacheEnabledByDefault || CacheAttributeMembersExplicitly(classLevelCacheAttribute, Members.Methods);
+            }
+
+	        return false;
+        }
+
+        private bool CacheAttributeMembersExplicitly(CustomAttribute attribute, Members requiredFlag)
+        {
+            if (attribute == null || attribute.ConstructorArguments.Count == 0)
+            {
+                return false;
+            }
+
+            Members constructorArgument = (Members) attribute.ConstructorArguments.Single().Value;
+
+            return constructorArgument.HasFlag(requiredFlag);
+        }
 
         private bool CacheAttributeExcludesProperties(CustomAttribute attribute)
         {

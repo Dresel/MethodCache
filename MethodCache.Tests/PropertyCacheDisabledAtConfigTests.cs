@@ -20,7 +20,7 @@
         }
 
         [Test]
-        public void ClassLevelCache_ShouldNotCacheAnyPropertiesWhenDisabledInXmlConfig()
+        public void ClassLevelCache_ShouldNotCacheProperties()
         {
             // Arrange
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
@@ -42,7 +42,7 @@
         }
 
         [Test]
-        public void IndividualCache_ShouldNotCacheAnyPropertiesWhenDisabledInXmlConfig()
+        public void IndividualCache_ShouldCacheEligibleProperties()
         {
             // Arrange
             var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
@@ -51,14 +51,12 @@
             // Act
             var value = instance.ReadOnlyProperty;
             value = instance.ReadOnlyProperty;
-            value = instance.AutoProperty;
-            value = instance.AutoProperty;
             value = instance.ReadWriteProperty;
             value = instance.ReadWriteProperty;
 
             // Assert
-            Assert.That(cache.NumStoreCalls, Is.EqualTo(0));
-            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(0));
+            Assert.That(cache.NumStoreCalls, Is.EqualTo(2));
+            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(2));
         }
 
         [Test]
@@ -105,6 +103,38 @@
             // Assert
             Assert.That(cache.NumStoreCalls, Is.EqualTo(0));
             Assert.That(cache.NumRetrieveCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldCachePropertiesWhenSelectedExplicitlyOnClassAttribute()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.Property;
+            value = instance.Property;
+
+            // Assert
+            Assert.That(cache.NumStoreCalls, Is.EqualTo(1));
+            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldCachePropertiesWhenAllMembersSelectedExplicitlyOnClassAttribute()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassAllExplicitlyIncluded>(Assembly, cache);
+
+            // Act
+            var value = instance.Property;
+            value = instance.Property;
+
+            // Assert
+            Assert.That(cache.NumStoreCalls, Is.EqualTo(1));
+            Assert.That(cache.NumRetrieveCalls, Is.EqualTo(1));
         }
     }
 }

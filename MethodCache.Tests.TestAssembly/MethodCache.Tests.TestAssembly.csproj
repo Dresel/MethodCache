@@ -43,6 +43,7 @@
     <Compile Include="Cache\DictionaryCache.cs" />
     <Compile Include="Cache\ICache.cs" />
     <Compile Include="Cache\ICacheWithRemove.cs" />
+    <Compile Include="TestClassAllExplicitlyIncluded.cs" />
     <Compile Include="TestClassMethodsExcluded.cs" />
     <Compile Include="TestClassPropertiesExcluded.cs" />
     <Compile Include="TestClassStaticProperties.cs" />
