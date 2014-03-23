@@ -1,4 +1,6 @@
-﻿namespace MethodCache.Tests
+﻿using System.Xml.Linq;
+
+namespace MethodCache.Tests
 {
 	using System;
 	using System.Diagnostics;
@@ -30,7 +32,7 @@
 			return Activator.CreateInstance(type, parameters);
 		}
 
-		public static Assembly WeaveAssembly()
+		public static Assembly WeaveAssembly(string suffix, XElement config)
 		{
 			string projectPath =
 				Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
@@ -41,7 +43,7 @@
 			assemblyPath = assemblyPath.Replace("Debug", "Release");
 #endif
 
-			string newAssembly = assemblyPath.Replace(".dll", "2.dll");
+			string newAssembly = assemblyPath.Replace(".dll", string.Format("{0}.dll", suffix));
 			File.Copy(assemblyPath, newAssembly, true);
 
 			ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(newAssembly);
@@ -50,6 +52,11 @@
 			weavingTask.LogInfo = (message) => Debug.WriteLine(message);
 			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
 			weavingTask.LogError = (message) => new Exception(message);
+
+            if (config != null)
+            {
+                weavingTask.Config = config;
+            }
 
 #if (DEBUG)
 			weavingTask.DefineConstants.Add("DEBUG");

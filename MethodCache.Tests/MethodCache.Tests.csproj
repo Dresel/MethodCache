@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="ModuleWeaverTests.cs" />
     <Compile Include="ModuleWeaverTestsBase.cs" />
+    <Compile Include="PropertiesDisabledAtConfigTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyCachingTests.cs" />
     <Compile Include="Verifier.cs" />
