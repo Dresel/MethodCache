@@ -5,7 +5,7 @@
     using MethodCache.Tests.TestAssembly.Cache;
     using NUnit.Framework;
 
-    public class PropertiesDisabledAtConfigTests : ModuleWeaverTestsBase
+    public class PropertyCacheDisabledAtConfigTests : ModuleWeaverTestsBase
     {
         protected override XElement WeaverConfig
         {
