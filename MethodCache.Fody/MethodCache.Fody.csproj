@@ -53,6 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\MethodCache.Attributes\Members.cs">
+      <Link>Members.cs</Link>
+    </Compile>
     <Compile Include="CecilHelper.cs" />
     <Compile Include="MethodsForWeaving.cs" />
     <Compile Include="ModuleWeaver.cs" />

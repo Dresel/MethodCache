@@ -37,7 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CacheAttribute.cs" />
-    <Compile Include="CacheMembers.cs" />
+    <Compile Include="Members.cs" />
     <Compile Include="NoCacheAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

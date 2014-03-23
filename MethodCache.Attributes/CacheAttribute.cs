@@ -9,11 +9,11 @@
 	public class CacheAttribute : Attribute
 	{
 	    public CacheAttribute()
-            : this(CacheMembers.All)
+            : this(Members.All)
         {
 	    }
 
-	    public CacheAttribute(CacheMembers membersToCache)
+	    public CacheAttribute(Members membersToCache)
 	    {
 	    }
 	}

@@ -3,7 +3,7 @@
     using System;
 
     [Flags]
-    public enum CacheMembers
+    public enum Members
     {
         Methods = 1,
         Properties = 2,

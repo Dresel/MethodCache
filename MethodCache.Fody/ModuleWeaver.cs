@@ -1,4 +1,6 @@
-﻿namespace MethodCache.Fody
+﻿using MethodCache.Attributes;
+
+namespace MethodCache.Fody
 {
 	using System;
 	using System.Collections.Generic;
@@ -198,7 +200,10 @@
 
         private bool ShouldWeaveProperty(PropertyDefinition property)
         {
-            bool hasClassLevelCache = property.DeclaringType.ContainsAttribute(CacheAttributeName);
+            CustomAttribute classLevelCacheAttribute =
+                property.DeclaringType.CustomAttributes.SingleOrDefault(x => x.Constructor.DeclaringType.Name == CacheAttributeName);
+
+            bool hasClassLevelCache = classLevelCacheAttribute != null && !CacheAttributeExcludesProperties(classLevelCacheAttribute);
             bool hasPropertyLevelCache = property.ContainsAttribute(CacheAttributeName);
             bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
             bool isCacheGetter = property.Name == CacheGetterName;
@@ -209,8 +214,11 @@
         }
 
 	    private bool ShouldWeaveMethod(MethodDefinition method)
-	    {
-            bool hasClassLevelCache = method.DeclaringType.ContainsAttribute(CacheAttributeName);
+        {
+            CustomAttribute classLevelCacheAttribute =
+                method.DeclaringType.CustomAttributes.SingleOrDefault(x => x.Constructor.DeclaringType.Name == CacheAttributeName);
+
+            bool hasClassLevelCache = classLevelCacheAttribute != null && !CacheAttributeExcludesMethods(classLevelCacheAttribute);
             bool hasMethodLevelCache = method.ContainsAttribute(CacheAttributeName);
             bool hasNoCacheAttribute = method.ContainsAttribute(NoCacheAttributeName);
 	        bool isSpecialName = method.IsSpecialName || method.IsGetter || method.IsSetter || method.IsConstructor;
@@ -218,6 +226,26 @@
 
             return (hasClassLevelCache || hasMethodLevelCache) && !hasNoCacheAttribute && !isSpecialName && !isCompilerGenerated;
 	    }
+
+        private bool CacheAttributeExcludesProperties(CustomAttribute attribute)
+        {
+            return CacheAttributeConstructedWithParam(attribute, Members.Methods);
+        }
+
+        private bool CacheAttributeExcludesMethods(CustomAttribute attribute)
+        {
+            return CacheAttributeConstructedWithParam(attribute, Members.Properties);
+        }
+
+        private bool CacheAttributeConstructedWithParam(CustomAttribute attribute, Members cachedMembers)
+        {
+            if (attribute == null || attribute.ConstructorArguments.Count == 0)
+            {
+                return false;
+            }
+
+            return Equals(attribute.ConstructorArguments.Single().Value, (int)cachedMembers);
+        }
 
         private void WeaveMethod(MethodDefinition methodDefinition, MethodDefinition propertyGet)
 		{
@@ -249,7 +277,7 @@
 
 		    Instruction current = firstInstruction.Prepend(processor.Create(OpCodes.Ldstr, cacheKey), processor);
 
-            current = SetCacheKeyLocalVariable(current, methodDefinition, processor, cacheKey, cacheKeyIndex, objectArrayIndex);
+            current = SetCacheKeyLocalVariable(current, methodDefinition, processor, cacheKeyIndex, objectArrayIndex);
 
             current = InjectCacheKeyCreatedCode(methodDefinition, current, processor, cacheKeyIndex);
 
@@ -490,7 +518,7 @@
         }
 
         private Instruction SetCacheKeyLocalVariable(
-            Instruction current, MethodDefinition methodDefinition, ILProcessor processor, string cacheKey, int cacheKeyIndex, int objectArrayIndex)
+            Instruction current, MethodDefinition methodDefinition, ILProcessor processor, int cacheKeyIndex, int objectArrayIndex)
         {
             if (methodDefinition.IsSetter || methodDefinition.IsGetter)
             {

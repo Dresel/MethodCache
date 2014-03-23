@@ -3,30 +3,30 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache(Members.Methods)]
-	public class TestClassPropertiesExcluded
+	[Cache(Members.Properties)]
+	public class TestClassMethodsExcluded
 	{
-        public TestClassPropertiesExcluded(ICache cache)
+        public TestClassMethodsExcluded(ICache cache)
 	    {
 	        Cache = cache;
 	    }
 
 	    public ICache Cache { get; private set; }
 
-	    public string ReadOnlyProperty
+	    public string Property
 	    {
             get { return "some value"; }
 	    }
 
         [Cache]
-	    public string ExplicitlyCachedProperty
+        public int MethodIncluded(int x)
         {
-            get { return "some value"; }
-	    }
+            return x * x;
+        }
 
         public int Method(int x)
         {
-            return x*x;
+            return x * x;
         }
 	}
 }

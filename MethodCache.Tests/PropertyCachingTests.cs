@@ -280,5 +280,37 @@ namespace MethodCache.Tests
             Assert.IsTrue(cache.NumStoreCalls == 0);
             Assert.IsTrue(cache.NumRetrieveCalls == 0);
         }
+
+        [Test]
+        public void ClassLevelCache_ShouldBePossibleToSelectivelyEnablePropertyWeaving()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassPropertiesExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.ExplicitlyCachedProperty;
+            value = instance.ExplicitlyCachedProperty;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void ClassLevelCache_ShouldCachePropertyWhenMethodsAreExcluded()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.Property;
+            value = instance.Property;
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
     }
 }

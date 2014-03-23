@@ -323,6 +323,54 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreCalls == 1);
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
-		}
+        }
+
+        [Test]
+        public void ClassLevelCacheMethodsWhenPropertiesExcluded()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassPropertiesExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.Method(10);
+            value = instance.Method(10);
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
+
+        [Test]
+        public void ClassLevelCacheMethodsExcluded()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.Method(10);
+            value = instance.Method(10);
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 0);
+            Assert.IsTrue(cache.NumRetrieveCalls == 0);
+        }
+
+        [Test]
+        public void ClassLevelCacheMethodsExcludedChooseSelectively()
+        {
+            // Arrange
+            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+            // Act
+            var value = instance.MethodIncluded(10);
+            value = instance.MethodIncluded(10);
+
+            // Assert
+            Assert.IsTrue(cache.NumStoreCalls == 1);
+            Assert.IsTrue(cache.NumRetrieveCalls == 1);
+        }
 	}
 }
