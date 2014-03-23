@@ -213,23 +213,26 @@ Now all the preparation is done and you can start with the real work. The classe
 
 ### Choosing what to cache
 
-Methods and properties to cache are selected using the following algorithm
+Class' methods and properties are selected for caching using the following algorithm:
 
-For each member
-
-1. If it is marked with `[Cache]` attribute, cache it
-2. If it is a method
-	1. If it the class is marked with `[Cache(Members.Methods)]` or `[Cache(Members.All)]`, cache it
-	2. It it the class is marked with `[Cache]` attribute and methods are not disabled in XML config, cache it
-3. If it is a property
-	1. If it the class is marked with `[Cache(Members.Properties)]` or `[Cache(Members.All)]`, cache it
-	2. It it the class is marked with `[Cache]` attribute and properties are not disabled in XML config, cache it
-4. Otherwise, don't cache it
+1. For each member
+	1. If it is marked with `[Cache]` attribute, **cache it**
+	2. If it is marked with `[NoCache]` attribute, **don't cache it**
+	2. If it is a method
+		2. If it the class is marked with `[Cache(Members.Methods)]` or `[Cache(Members.All)]`, **cache it**
+		3. It it the class is marked with `[Cache]` attribute and methods are not disabled in XML config, **cache it**
+	3. If it is a property
+		1. If it is an auto-property, **don't cache it**
+		2. If it is a write-only property, **don't cache it**
+		3. If it is the `Cache` property, **don't cache it**
+		2. If it the class is marked with `[Cache(Members.Properties)]` or `[Cache(Members.All)]`, **cache it**
+		3. It it the class is marked with `[Cache]` attribute and properties are not disabled in XML config, **cache it**
+	4. Otherwise, **don't cache it**
 
 Notes
 * `[Cache(Members.Methods | Members.Properties)]` can be used in place of `[Cache(Members.All)]`.
 * Arguments passed to `[Cache]` attribute will be ignored on individual members
-	
+
 ### Improvements
 
 For production I would suggest using some DI framework and creating an ICache interface:
