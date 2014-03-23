@@ -215,7 +215,8 @@ Now all the preparation is done and you can start with the real work. The classe
 
 Methods and properties to cache are selected using the following algorithm
 
-For a given member
+For each member
+
 1. If it is marked with `[Cache]` attribute, cache it
 2. If it is a method
 	1. If it the class is marked with `[Cache(Members.Methods)]` or `[Cache(Members.All)]`, cache it
