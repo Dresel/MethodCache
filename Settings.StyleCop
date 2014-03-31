@@ -91,6 +91,13 @@
       <AnalyzerSettings />
     </Analyzer>
     <Analyzer AnalyzerId="StyleCopPlus.StyleCopPlusRules">
+      <Rules>
+        <Rule Name="CodeLineMustNotBeLongerThan">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
       <AnalyzerSettings>
         <StringProperty Name="AdvancedNaming_ClassInternal">$(AaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_StructInternal">$(AaBb)</StringProperty>
