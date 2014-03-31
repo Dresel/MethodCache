@@ -5,12 +5,12 @@
 
 	public class TestClass2
 	{
-		public ICache Cache { get; set; }
-
 		public TestClass2(ICache cache)
 		{
 			Cache = cache;
 		}
+
+		public ICache Cache { get; set; }
 
 		[Cache]
 		public int MethodOne(int x)

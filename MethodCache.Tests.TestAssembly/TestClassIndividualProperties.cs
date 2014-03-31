@@ -1,40 +1,35 @@
-﻿using MethodCache.Attributes;
-using MethodCache.Tests.TestAssembly.Cache;
-
-namespace MethodCache.Tests.TestAssembly
+﻿namespace MethodCache.Tests.TestAssembly
 {
-    public class TestClassIndividualProperties
-    {
-        private int _someValue;
-        private string _field;
+	using MethodCache.Attributes;
+	using MethodCache.Tests.TestAssembly.Cache;
 
-        public TestClassIndividualProperties(ICacheWithRemove cache)
-	    {
-	        Cache = cache;
-	    }
+	public class TestClassIndividualProperties
+	{
+		private string _field;
 
-        public ICacheWithRemove Cache { get; private set; }
+		public TestClassIndividualProperties(ICacheWithRemove cache)
+		{
+			Cache = cache;
+		}
 
-        [Cache]
-	    public string ReadOnlyProperty
-	    {
-            get { return "some value"; }
-	    }
+		[Cache]
+		public int AutoProperty { get; set; }
 
-        [Cache]
-        public int AutoProperty { get; set; }
+		public ICacheWithRemove Cache { get; private set; }
 
-        [Cache]
-        public int ReadWriteProperty
-        {
-            get { return _someValue; }
-            set { _someValue = value; }
-        }
+		[Cache]
+		public string ReadOnlyProperty
+		{
+			get { return "some value"; }
+		}
 
-        [Cache]
-        public string SetOnlyProperty
-        {
-            set { _field = value; }
-        }
-    }
+		[Cache]
+		public int ReadWriteProperty { get; set; }
+
+		[Cache]
+		public string SetOnlyProperty
+		{
+			set { this._field = value; }
+		}
+	}
 }

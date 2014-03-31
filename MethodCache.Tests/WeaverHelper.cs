@@ -1,11 +1,10 @@
-﻿using System.Xml.Linq;
-
-namespace MethodCache.Tests
+﻿namespace MethodCache.Tests
 {
 	using System;
 	using System.Diagnostics;
 	using System.IO;
 	using System.Reflection;
+	using System.Xml.Linq;
 	using MethodCache.Fody;
 	using Mono.Cecil;
 
@@ -37,7 +36,8 @@ namespace MethodCache.Tests
 			string projectPath =
 				Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
 					@"..\..\..\MethodCache.Tests.TestAssembly\MethodCache.Tests.TestAssembly.csproj"));
-			string assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\MethodCache.Tests.TestAssembly.dll");
+			string assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath),
+				@"bin\Debug\MethodCache.Tests.TestAssembly.dll");
 
 #if (!DEBUG)
 			assemblyPath = assemblyPath.Replace("Debug", "Release");
@@ -53,10 +53,10 @@ namespace MethodCache.Tests
 			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
 			weavingTask.LogError = (message) => new Exception(message);
 
-            if (config != null)
-            {
-                weavingTask.Config = config;
-            }
+			if (config != null)
+			{
+				weavingTask.Config = config;
+			}
 
 #if (DEBUG)
 			weavingTask.DefineConstants.Add("DEBUG");

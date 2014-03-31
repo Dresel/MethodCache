@@ -1,12 +1,14 @@
 ﻿namespace MethodCache.Attributes
 {
-    using System;
+	using System;
 
-    [Flags]
-    public enum Members
-    {
-        Methods = 1,
-        Properties = 2,
-        All = 3
-    }
+	[Flags]
+	public enum Members
+	{
+		Methods = 1,
+
+		Properties = 2,
+
+		All = 3
+	}
 }

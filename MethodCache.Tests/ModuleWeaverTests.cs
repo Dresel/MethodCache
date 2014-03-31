@@ -5,12 +5,60 @@
 	using System.Reflection;
 	using MethodCache.Fody;
 	using MethodCache.Tests.TestAssembly;
-    using MethodCache.Tests.TestAssembly.Cache;
-    using NUnit.Framework;
+	using MethodCache.Tests.TestAssembly.Cache;
+	using NUnit.Framework;
 
 	public class ModuleWeaverTests : ModuleWeaverTestsBase
-    {
-        [Test]
+	{
+		[Test]
+		public void ClassLevelCacheMethodsExcluded()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.Method(10);
+			value = instance.Method(10);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 0);
+			Assert.IsTrue(cache.NumRetrieveCalls == 0);
+		}
+
+		[Test]
+		public void ClassLevelCacheMethodsExcludedChooseSelectively()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.MethodIncluded(10);
+			value = instance.MethodIncluded(10);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+		}
+
+		[Test]
+		public void ClassLevelCacheMethodsWhenPropertiesExcluded()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassPropertiesExcluded>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.Method(10);
+			value = instance.Method(10);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+		}
+
+		[Test]
 		public void ModuleWeaverExecuteWeavesCorrectIL()
 		{
 			string assemblyPath = Assembly.CodeBase.Remove(0, 8);
@@ -138,7 +186,7 @@
 
 			Type classType = testClass2.GetType();
 			MethodInfo methodInfo = classType.GetMethod("MethodOne");
-            
+
 			Assert.IsFalse(methodInfo.GetCustomAttributes(true).Any(x => x.GetType().Name == ModuleWeaver.CacheAttributeName));
 		}
 
@@ -323,54 +371,6 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreCalls == 1);
 			Assert.IsTrue(cache.NumRetrieveCalls == 1);
-        }
-
-        [Test]
-        public void ClassLevelCacheMethodsWhenPropertiesExcluded()
-        {
-            // Arrange
-            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
-            var instance = WeaverHelper.CreateInstance<TestClassPropertiesExcluded>(Assembly, cache);
-
-            // Act
-            var value = instance.Method(10);
-            value = instance.Method(10);
-
-            // Assert
-            Assert.IsTrue(cache.NumStoreCalls == 1);
-            Assert.IsTrue(cache.NumRetrieveCalls == 1);
-        }
-
-        [Test]
-        public void ClassLevelCacheMethodsExcluded()
-        {
-            // Arrange
-            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
-            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
-
-            // Act
-            var value = instance.Method(10);
-            value = instance.Method(10);
-
-            // Assert
-            Assert.IsTrue(cache.NumStoreCalls == 0);
-            Assert.IsTrue(cache.NumRetrieveCalls == 0);
-        }
-
-        [Test]
-        public void ClassLevelCacheMethodsExcludedChooseSelectively()
-        {
-            // Arrange
-            var cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
-            var instance = WeaverHelper.CreateInstance<TestClassMethodsExcluded>(Assembly, cache);
-
-            // Act
-            var value = instance.MethodIncluded(10);
-            value = instance.MethodIncluded(10);
-
-            // Assert
-            Assert.IsTrue(cache.NumStoreCalls == 1);
-            Assert.IsTrue(cache.NumRetrieveCalls == 1);
-        }
+		}
 	}
 }

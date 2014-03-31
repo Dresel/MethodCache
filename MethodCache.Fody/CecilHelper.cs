@@ -76,12 +76,14 @@
 			return instruction.Append(processor.Create(OpCodes.Stloc, index), processor);
 		}
 
-        public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, MemberReference attributeType)
+		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition,
+			MemberReference attributeType)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
 		}
 
-		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, string attributeTypeName)
+		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition,
+			string attributeTypeName)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
 		}

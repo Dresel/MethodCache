@@ -6,27 +6,27 @@
 	[Cache(Members.Methods)]
 	public class TestClassPropertiesExcluded
 	{
-        public TestClassPropertiesExcluded(ICache cache)
-	    {
-	        Cache = cache;
-	    }
+		public TestClassPropertiesExcluded(ICache cache)
+		{
+			Cache = cache;
+		}
 
-	    public ICache Cache { get; private set; }
+		public ICache Cache { get; private set; }
 
-	    public string ReadOnlyProperty
-	    {
-            get { return "some value"; }
-	    }
+		[Cache]
+		public string ExplicitlyCachedProperty
+		{
+			get { return "some value"; }
+		}
 
-        [Cache]
-	    public string ExplicitlyCachedProperty
-        {
-            get { return "some value"; }
-	    }
+		public string ReadOnlyProperty
+		{
+			get { return "some value"; }
+		}
 
-        public int Method(int x)
-        {
-            return x*x;
-        }
+		public int Method(int x)
+		{
+			return x * x;
+		}
 	}
 }

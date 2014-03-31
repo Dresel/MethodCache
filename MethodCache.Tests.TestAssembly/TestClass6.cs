@@ -5,7 +5,8 @@
 
 	public class TestClass6 : TestClass1
 	{
-		public TestClass6(ICache cache) : base(cache)
+		public TestClass6(ICache cache)
+			: base(cache)
 		{
 		}
 

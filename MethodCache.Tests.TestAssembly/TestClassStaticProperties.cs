@@ -6,19 +6,13 @@
 	[Cache]
 	public class TestClassStaticProperties
 	{
-	    private static int _someValue;
+		public static ICacheWithRemove Cache { get; set; }
 
-	    public static ICacheWithRemove Cache { get; set; }
+		public static string ReadOnlyProperty
+		{
+			get { return "some value"; }
+		}
 
-	    public static string ReadOnlyProperty
-	    {
-            get { return "some value"; }
-	    }
-
-	    public static int ReadWriteProperty
-	    {
-            get { return _someValue; }
-	        set { _someValue = value; }
-	    }
+		public static int ReadWriteProperty { get; set; }
 	}
 }

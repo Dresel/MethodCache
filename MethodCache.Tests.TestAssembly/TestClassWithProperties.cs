@@ -6,38 +6,33 @@
 	[Cache]
 	public class TestClassWithProperties
 	{
-	    private int _someValue;
-	    private string _field;
+		private string _field;
 
-        public TestClassWithProperties(ICacheWithRemove cache)
-	    {
-	        Cache = cache;
-	    }
+		public TestClassWithProperties(ICacheWithRemove cache)
+		{
+			Cache = cache;
+		}
 
-	    public ICacheWithRemove Cache { get; private set; }
+		public int AutoProperty { get; set; }
 
-	    public string ReadOnlyProperty
-	    {
-            get { return "some value"; }
-	    }
+		public ICacheWithRemove Cache { get; private set; }
 
-        [NoCache]
-	    public string ReadOnlyNoCache
-	    {
-	        get { return "no cache value"; }
-	    }
+		[NoCache]
+		public string ReadOnlyNoCache
+		{
+			get { return "no cache value"; }
+		}
 
-        public int AutoProperty { get; set; }
+		public string ReadOnlyProperty
+		{
+			get { return "some value"; }
+		}
 
-	    public int ReadWriteProperty
-	    {
-            get { return _someValue; }
-	        set { _someValue = value; }
-	    }
+		public int ReadWriteProperty { get; set; }
 
-	    public string SetOnlyProperty
-	    {
-	        set { _field = value; }
-	    }
+		public string SetOnlyProperty
+		{
+			set { this._field = value; }
+		}
 	}
 }

@@ -6,12 +6,12 @@
 	[Cache]
 	public class TestClass3
 	{
-		public DictionaryCache Cache { get; set; }
-
 		public TestClass3(DictionaryCache cache)
 		{
 			Cache = cache;
 		}
+
+		public DictionaryCache Cache { get; set; }
 
 		public int MethodOne(int x)
 		{

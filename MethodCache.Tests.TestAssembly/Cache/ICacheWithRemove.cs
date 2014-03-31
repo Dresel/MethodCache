@@ -1,13 +1,13 @@
 ﻿namespace MethodCache.Tests.TestAssembly.Cache
 {
-    public interface ICacheWithRemove
-    {
-        bool Contains(string key);
+	public interface ICacheWithRemove
+	{
+		bool Contains(string key);
 
-        T Retrieve<T>(string key);
+		void Remove(string key);
 
-        void Store(string key, object data);
+		T Retrieve<T>(string key);
 
-        void Remove(string key);
-    }
+		void Store(string key, object data);
+	}
 }

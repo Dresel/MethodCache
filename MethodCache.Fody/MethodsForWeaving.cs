@@ -1,49 +1,50 @@
-﻿using System.Collections.Generic;
-using Mono.Cecil;
-
-namespace MethodCache.Fody
+﻿namespace MethodCache.Fody
 {
-    internal class MethodsForWeaving
-    {
-        private readonly IList<MethodDefinition> _methods;
-        private readonly IList<MethodDefinition> _setters;
+	using System.Collections.Generic;
+	using Mono.Cecil;
 
-        public MethodsForWeaving()
-        {
-            _methods = new List<MethodDefinition>();
-            _setters = new List<MethodDefinition>();
-        }
+	internal class MethodsForWeaving
+	{
+		private readonly IList<MethodDefinition> _methods;
 
-        public IEnumerable<MethodDefinition> Methods
-        {
-            get { return _methods; }
-        }
+		private readonly IList<MethodDefinition> _setters;
 
-        public IEnumerable<MethodDefinition> PropertySetters
-        {
-            get { return _setters; }
-        }
+		public MethodsForWeaving()
+		{
+			this._methods = new List<MethodDefinition>();
+			this._setters = new List<MethodDefinition>();
+		}
 
-        public void Add(MethodDefinition method)
-        {
-            _methods.Add(method);
-        }
+		public IEnumerable<MethodDefinition> Methods
+		{
+			get { return this._methods; }
+		}
 
-        public void Add(PropertyDefinition property)
-        {
-            MethodDefinition getter = property.GetMethod;
-            MethodDefinition setter = property.SetMethod;
+		public IEnumerable<MethodDefinition> PropertySetters
+		{
+			get { return this._setters; }
+		}
 
-            if (getter == null)
-            {
-                return;
-            }
+		public void Add(MethodDefinition method)
+		{
+			this._methods.Add(method);
+		}
 
-            _methods.Add(getter);
-            if (setter != null)
-            {
-                _setters.Add(setter);
-            }
-        }
-    }
+		public void Add(PropertyDefinition property)
+		{
+			MethodDefinition getter = property.GetMethod;
+			MethodDefinition setter = property.SetMethod;
+
+			if (getter == null)
+			{
+				return;
+			}
+
+			this._methods.Add(getter);
+			if (setter != null)
+			{
+				this._setters.Add(setter);
+			}
+		}
+	}
 }
