@@ -9,6 +9,38 @@
 	public class PropertyCachingTests : ModuleWeaverTestsBase
 	{
 		[Test]
+		public void ClassLevelCacheWithoutRemove_ShouldCacheReadOnlyProperties()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassWithPropertiesWithoutRemove>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.ReadOnlyProperty;
+			value = instance.ReadOnlyProperty;
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+		}
+
+		[Test]
+		public void ClassLevelCacheWithoutRemove_ShouldNotCacheReadWriteProperty()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassWithPropertiesWithoutRemove>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.ReadWriteProperty;
+			value = instance.ReadWriteProperty;
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 0);
+			Assert.IsTrue(cache.NumRetrieveCalls == 0);
+		}
+
+		[Test]
 		public void ClassLevelCache_SettingPropertyShouldInvalidateCache()
 		{
 			// Arrange

@@ -60,6 +60,7 @@
     <Compile Include="TestClass7.cs" />
     <Compile Include="TestClass8.cs" />
     <Compile Include="TestClass9.cs" />
+    <Compile Include="TestClassWithPropertiesWithoutRemove.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MethodCache.Attributes\MethodCache.Attributes.csproj">
