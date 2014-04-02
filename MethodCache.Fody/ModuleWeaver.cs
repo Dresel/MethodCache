@@ -611,9 +611,9 @@
 						continue;
 					}
 
-					WeaveMethod(property.GetMethod);
+					LogInfo(string.Format("Weaving property {0}::{1}.", property.DeclaringType.Name, property.Name));
 
-					LogInfo(string.Format("Weaving method {0}::{1}.", property.DeclaringType.Name, property.Name));
+					WeaveMethod(property.GetMethod, propertyGet);
 					WeavePropertySetter(property.SetMethod, propertyGet);
 				}
 			}
