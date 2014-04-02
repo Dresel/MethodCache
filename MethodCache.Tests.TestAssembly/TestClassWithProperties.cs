@@ -8,6 +8,8 @@
 	{
 		private string field;
 
+		private int someValue;
+
 		public TestClassWithProperties(ICacheWithRemove cache)
 		{
 			Cache = cache;
@@ -28,7 +30,12 @@
 			get { return "some value"; }
 		}
 
-		public int ReadWriteProperty { get; set; }
+		// ReSharper disable once ConvertToAutoProperty
+		public int ReadWriteProperty
+		{
+			get { return this.someValue; }
+			set { this.someValue = value; }
+		}
 
 		public string SetOnlyProperty
 		{

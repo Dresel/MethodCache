@@ -103,8 +103,8 @@
         <StringProperty Name="AdvancedNaming_StructInternal">$(AaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_ProtectedInstanceField">$(aaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_PrivateInstanceField">$(aaBb)</StringProperty>
-        <StringProperty Name="AdvancedNaming_ProtectedStaticField">$(AaBb)</StringProperty>
-        <StringProperty Name="AdvancedNaming_PrivateStaticField">$(AaBb)</StringProperty>
+        <StringProperty Name="AdvancedNaming_ProtectedStaticField">$(aaBb)</StringProperty>
+        <StringProperty Name="AdvancedNaming_PrivateStaticField">$(aaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_ProtectedConst">$(AaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_PrivateConst">$(AaBb)</StringProperty>
         <StringProperty Name="AdvancedNaming_InternalConst">$(AaBb)</StringProperty>

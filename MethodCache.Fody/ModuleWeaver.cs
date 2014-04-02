@@ -76,7 +76,7 @@
 			MethodsForWeaving methodToWeave = SelectMethods();
 
 			WeaveMethods(methodToWeave.Methods);
-			WeavePropertySetters(methodToWeave.PropertySetters);
+			WeaveProperties(methodToWeave.Properties);
 
 			RemoveReference();
 		}
@@ -270,6 +270,11 @@
 			{
 				LogWarning(string.Format("Method {0} missing in {1}.", CacheTypeRemoveMethodName,
 					propertyGet.ReturnType.Resolve().FullName));
+
+				LogWarning(
+					string.Format(
+						"ReturnType {0} of Getter {1} of Class {2} does not implement all methods. Skip weaving of method {3}.",
+						propertyGet.ReturnType.Name, CacheGetterName, methodDefinition.DeclaringType.Name, methodDefinition.Name));
 
 				return false;
 			}
@@ -559,27 +564,58 @@
 			methodDefinition.Body.OptimizeMacros();
 		}
 
+		private void WeaveMethod(MethodDefinition methodDefinition)
+		{
+			MethodDefinition propertyGet = GetCacheGetter(methodDefinition);
+
+			if (!IsMethodValidForWeaving(propertyGet, methodDefinition))
+			{
+				return;
+			}
+
+			if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
+			{
+				LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
+
+				return;
+			}
+
+			LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
+
+			WeaveMethod(methodDefinition, propertyGet);
+		}
+
 		private void WeaveMethods(IEnumerable<MethodDefinition> methodDefinitions)
 		{
 			foreach (MethodDefinition methodDefinition in methodDefinitions)
 			{
-				MethodDefinition propertyGet = GetCacheGetter(methodDefinition);
+				WeaveMethod(methodDefinition);
+			}
+		}
 
-				if (!IsMethodValidForWeaving(propertyGet, methodDefinition))
+		private void WeaveProperties(IEnumerable<PropertyDefinition> properties)
+		{
+			foreach (PropertyDefinition property in properties)
+			{
+				// Get-Only Property, weave like normal methods
+				if (property.SetMethod == null)
 				{
-					continue;
+					WeaveMethod(property.GetMethod);
 				}
-
-				if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
+				else
 				{
-					LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
+					MethodDefinition propertyGet = GetCacheGetter(property.SetMethod);
 
-					continue;
+					if (!IsPropertySetterValidForWeaving(propertyGet, property.SetMethod))
+					{
+						continue;
+					}
+
+					WeaveMethod(property.GetMethod);
+
+					LogInfo(string.Format("Weaving method {0}::{1}.", property.DeclaringType.Name, property.Name));
+					WeavePropertySetter(property.SetMethod, propertyGet);
 				}
-
-				LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
-
-				WeaveMethod(methodDefinition, propertyGet);
 			}
 		}
 
@@ -587,6 +623,7 @@
 		{
 			setter.Body.InitLocals = true;
 			setter.Body.SimplifyMacros();
+
 			Instruction firstInstruction = setter.Body.Instructions.First();
 			ILProcessor processor = setter.Body.GetILProcessor();
 
@@ -621,22 +658,6 @@
 					processor);
 
 			setter.Body.OptimizeMacros();
-		}
-
-		private void WeavePropertySetters(IEnumerable<MethodDefinition> propertySetters)
-		{
-			foreach (MethodDefinition setter in propertySetters)
-			{
-				MethodDefinition propertyGet = GetCacheGetter(setter);
-
-				if (!IsPropertySetterValidForWeaving(propertyGet, setter))
-				{
-					continue;
-				}
-
-				LogInfo(string.Format("Weaving method {0}::{1}.", setter.DeclaringType.Name, setter.Name));
-				WeavePropertySetter(setter, propertyGet);
-			}
 		}
 	}
 }

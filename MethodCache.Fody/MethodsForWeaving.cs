@@ -5,46 +5,39 @@
 
 	internal class MethodsForWeaving
 	{
-		private readonly IList<MethodDefinition> _methods;
+		private readonly IList<MethodDefinition> methods;
 
-		private readonly IList<MethodDefinition> _setters;
+		private readonly IList<PropertyDefinition> properties;
 
 		public MethodsForWeaving()
 		{
-			this._methods = new List<MethodDefinition>();
-			this._setters = new List<MethodDefinition>();
+			this.methods = new List<MethodDefinition>();
+			this.properties = new List<PropertyDefinition>();
 		}
 
 		public IEnumerable<MethodDefinition> Methods
 		{
-			get { return this._methods; }
+			get { return this.methods; }
 		}
 
-		public IEnumerable<MethodDefinition> PropertySetters
+		public IEnumerable<PropertyDefinition> Properties
 		{
-			get { return this._setters; }
+			get { return this.properties; }
 		}
 
 		public void Add(MethodDefinition method)
 		{
-			this._methods.Add(method);
+			this.methods.Add(method);
 		}
 
 		public void Add(PropertyDefinition property)
 		{
-			MethodDefinition getter = property.GetMethod;
-			MethodDefinition setter = property.SetMethod;
-
-			if (getter == null)
+			if (property.GetMethod == null)
 			{
 				return;
 			}
 
-			this._methods.Add(getter);
-			if (setter != null)
-			{
-				this._setters.Add(setter);
-			}
+			this.properties.Add(property);
 		}
 	}
 }
