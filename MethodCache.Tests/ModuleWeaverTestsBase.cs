@@ -7,11 +7,11 @@
 	[TestFixture]
 	public abstract class ModuleWeaverTestsBase
 	{
-		private Assembly _assembly;
+		private Assembly assembly;
 
 		protected Assembly Assembly
 		{
-			get { return this._assembly; }
+			get { return this.assembly; }
 		}
 
 		protected virtual XElement WeaverConfig
@@ -22,9 +22,9 @@
 		[SetUp]
 		public void ClassInitialize()
 		{
-			if (this._assembly == null)
+			if (this.assembly == null)
 			{
-				this._assembly = WeaverHelper.WeaveAssembly(GetType().Name, WeaverConfig);
+				this.assembly = WeaverHelper.WeaveAssembly(GetType().Name, WeaverConfig);
 			}
 		}
 	}

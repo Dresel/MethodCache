@@ -1,6 +1,7 @@
 ﻿namespace MethodCache.Tests
 {
 	using System.Diagnostics;
+	using System.Diagnostics.CodeAnalysis;
 	using System.IO;
 	using Microsoft.Build.Utilities;
 

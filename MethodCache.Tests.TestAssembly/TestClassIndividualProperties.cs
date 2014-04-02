@@ -5,7 +5,7 @@
 
 	public class TestClassIndividualProperties
 	{
-		private string _field;
+		private string field;
 
 		public TestClassIndividualProperties(ICacheWithRemove cache)
 		{
@@ -29,7 +29,7 @@
 		[Cache]
 		public string SetOnlyProperty
 		{
-			set { this._field = value; }
+			set { this.field = value; }
 		}
 	}
 }

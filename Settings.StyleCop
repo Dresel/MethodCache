@@ -110,6 +110,7 @@
         <StringProperty Name="AdvancedNaming_InternalConst">$(AaBb)</StringProperty>
         <StringProperty Name="SP2002_Mode">NotEmpty</StringProperty>
         <StringProperty Name="AdvancedNaming_MethodTest">$(AaBb):$(AaBb)_$(AaBb)</StringProperty>
+        <StringProperty Name="AdvancedNaming_Words">3D A B C FxCop ID IDs IL OK PE StyleCop X</StringProperty>
       </AnalyzerSettings>
     </Analyzer>
     <Analyzer AnalyzerId="StyleCop.CSharp.NamingRules">

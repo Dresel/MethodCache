@@ -29,10 +29,6 @@
 
 		public const string NoCacheAttributeName = "NoCacheAttribute";
 
-		private bool _methodCacheEnabledByDefault = true;
-
-		private bool _propertyCacheEnabledByDefault = true;
-
 		public ModuleWeaver()
 		{
 			LogInfo = m => { };
@@ -65,13 +61,20 @@
 
 		private bool LogDebugOutput { get; set; }
 
+		private bool MethodCacheEnabledByDefault { get; set; }
+
+		private bool PropertyCacheEnabledByDefault { get; set; }
+
 		public void Execute()
 		{
 			LogDebugOutput = DefineConstants.Any(x => x.ToLower() == "debug");
+			MethodCacheEnabledByDefault = true;
+			PropertyCacheEnabledByDefault = true;
 
 			ReadConfiguration();
 
 			MethodsForWeaving methodToWeave = SelectMethods();
+
 			WeaveMethods(methodToWeave.Methods);
 			WeavePropertySetters(methodToWeave.PropertySetters);
 
@@ -92,6 +95,7 @@
 			else
 			{
 				builder.Append(methodDefinition.Name);
+
 				for (int i = 0; i < methodDefinition.Parameters.Count; i++)
 				{
 					builder.Append(string.Format("_{{{0}}}", i));
@@ -104,8 +108,10 @@
 		private static MethodDefinition GetCacheGetter(MethodDefinition methodDefinition)
 		{
 			MethodDefinition propertyGet = methodDefinition.DeclaringType.GetPropertyGet(CacheGetterName);
+
 			propertyGet = propertyGet ??
 				methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
+
 			return propertyGet;
 		}
 
@@ -282,13 +288,13 @@
 			if (ConfigHasAttribute("CacheProperties", "false"))
 			{
 				LogWarning("Disabling property weaving.");
-				this._propertyCacheEnabledByDefault = false;
+				PropertyCacheEnabledByDefault = false;
 			}
 
 			if (ConfigHasAttribute("CacheMethods", "false"))
 			{
 				LogWarning("Disabling method weaving.");
-				this._methodCacheEnabledByDefault = false;
+				MethodCacheEnabledByDefault = false;
 			}
 		}
 
@@ -395,21 +401,20 @@
 
 			if (hasNoCacheAttribute || isSpecialName || isCompilerGenerated)
 			{
-				// never weave property accessors, special methods and compiler generated methods
+				// Never weave property accessors, special methods and compiler generated methods
 				return false;
 			}
 
 			if (hasMethodLevelCache)
 			{
-				// always weave methods explicitly marked for cache
+				// Always weave methods explicitly marked for cache
 				return true;
 			}
 
 			if (hasClassLevelCache && !CacheAttributeExcludesMethods(classLevelCacheAttribute))
 			{
-				// otherwise weave if marked at class level
-				return this._methodCacheEnabledByDefault ||
-					CacheAttributeMembersExplicitly(classLevelCacheAttribute, Members.Methods);
+				// Otherwise weave if marked at class level
+				return MethodCacheEnabledByDefault || CacheAttributeMembersExplicitly(classLevelCacheAttribute, Members.Methods);
 			}
 
 			return false;
@@ -432,20 +437,20 @@
 
 			if (hasNoCacheAttribute || isCacheGetter || isAutoProperty || !hasGetAccessor)
 			{
-				// never weave Cache property, auto-properties, write-only properties and properties explicitly excluded 
+				// Never weave Cache property, auto-properties, write-only properties and properties explicitly excluded
 				return false;
 			}
 
 			if (hasPropertyLevelCache)
 			{
-				// always weave properties explicitly marked for cache
+				// Always weave properties explicitly marked for cache
 				return true;
 			}
 
 			if (hasClassLevelCache && !CacheAttributeExcludesProperties(classLevelCacheAttribute))
 			{
-				// otherwise weave if marked at class level
-				return this._propertyCacheEnabledByDefault ||
+				// Otherwise weave if marked at class level
+				return PropertyCacheEnabledByDefault ||
 					CacheAttributeMembersExplicitly(classLevelCacheAttribute, Members.Properties);
 			}
 
@@ -493,13 +498,14 @@
 				current = current.AppendLdarg(processor, 0);
 			}
 
+			MethodReference methodReferenceContain =
+				methodDefinition.Module.Import(CacheTypeGetContainsMethod(propertyGetReturnTypeDefinition,
+					CacheTypeContainsMethodName));
+
 			current =
 				current.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 					.AppendLdloc(processor, cacheKeyIndex)
-					.Append(
-						processor.Create(OpCodes.Callvirt,
-							methodDefinition.Module.Import(CacheTypeGetContainsMethod(propertyGetReturnTypeDefinition,
-								CacheTypeContainsMethodName))), processor)
+					.Append(processor.Create(OpCodes.Callvirt, methodReferenceContain), processor)
 					.Append(processor.Create(OpCodes.Brfalse, firstInstruction), processor);
 
 			// False branche (store value in cache of each return instruction)
@@ -517,15 +523,15 @@
 					returnInstruction.Previous.AppendLdarg(processor, 0);
 				}
 
+				MethodReference methodReferenceReturn =
+					methodDefinition.Module.Import(CacheTypeGetStoreMethod(propertyGetReturnTypeDefinition, CacheTypeStoreMethodName));
+
 				returnInstruction.Previous.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)),
 					processor)
 					.AppendLdloc(processor, cacheKeyIndex)
 					.AppendLdloc(processor, resultIndex)
 					.AppendBoxIfNecessary(processor, methodDefinition.ReturnType)
-					.Append(
-						processor.Create(OpCodes.Callvirt,
-							methodDefinition.Module.Import(CacheTypeGetStoreMethod(propertyGetReturnTypeDefinition, CacheTypeStoreMethodName))),
-						processor)
+					.Append(processor.Create(OpCodes.Callvirt, methodReferenceReturn), processor)
 					.AppendLdloc(processor, resultIndex);
 			}
 
@@ -540,12 +546,13 @@
 			}
 
 			// Start of branche true
+			MethodReference methodReferenceRetrieve =
+				methodDefinition.Module.Import(CacheTypeGetRetrieveMethod(propertyGetReturnTypeDefinition,
+					CacheTypeRetrieveMethodName)).MakeGeneric(new[] { methodDefinition.ReturnType });
+
 			current.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
-				.Append(
-					processor.Create(OpCodes.Callvirt,
-						methodDefinition.Module.Import(CacheTypeGetRetrieveMethod(propertyGetReturnTypeDefinition,
-							CacheTypeRetrieveMethodName)).MakeGeneric(new[] { methodDefinition.ReturnType })), processor)
+				.Append(processor.Create(OpCodes.Callvirt, methodReferenceRetrieve), processor)
 				.AppendStloc(processor, resultIndex)
 				.Append(processor.Create(OpCodes.Br, returnInstructions.Last().Previous), processor);
 
