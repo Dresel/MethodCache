@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>MethodCache.Fody</id>
-        <version>1.3.2</version>
+        <version>1.4.0</version>
         <title>MethodCache.Fody</title>
         <authors>Christopher Dresel</authors>
         <owners>Christopher Dresel</owners>
@@ -21,6 +21,7 @@
         <file src="input\lib\net40\MethodCache.Attributes.dll" target="lib\net40\MethodCache.Attributes.dll" />
         <file src="tools\net40\install.ps1" target="tools\net40\install.ps1" />
         <file src="tools\net40\uninstall.ps1" target="tools\net40\uninstall.ps1" />
+		<file src="content\readme.txt" target="content\readme.txt" />
         <file src="input\lib\net40\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
     </files>
 </package>
