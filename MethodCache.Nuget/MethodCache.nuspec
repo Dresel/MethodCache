@@ -9,7 +9,7 @@
         <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
         <projectUrl>http://github.com/Dresel/MethodCache</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>A method caching Fody addin.</description>
+        <description>A method and property caching Fody addin.</description>
         <summary />
         <language>en-US</language>
         <tags>ILWeaving, Fody, Cecil, Caching</tags>
