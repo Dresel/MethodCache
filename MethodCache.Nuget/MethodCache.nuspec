@@ -21,7 +21,7 @@
         <file src="input\lib\net40\MethodCache.Attributes.dll" target="lib\net40\MethodCache.Attributes.dll" />
         <file src="tools\net40\install.ps1" target="tools\net40\install.ps1" />
         <file src="tools\net40\uninstall.ps1" target="tools\net40\uninstall.ps1" />
-		<file src="content\readme.txt" target="content\readme.txt" />
+        <file src="readme.txt" target="" />
         <file src="input\lib\net40\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
     </files>
 </package>
