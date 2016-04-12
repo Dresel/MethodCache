@@ -18,10 +18,10 @@
         </dependencies>
     </metadata>
     <files>
-        <file src="input\lib\net40\MethodCache.Attributes.dll" target="lib\net40\MethodCache.Attributes.dll" />
-        <file src="tools\net40\install.ps1" target="tools\net40\install.ps1" />
-        <file src="tools\net40\uninstall.ps1" target="tools\net40\uninstall.ps1" />
+        <file src="input\lib\MethodCache.Attributes.dll" target="lib\MethodCache.Attributes.dll" />
+        <file src="tools\install.ps1" target="tools\install.ps1" />
+        <file src="tools\uninstall.ps1" target="tools\uninstall.ps1" />
         <file src="readme.txt" target="" />
-        <file src="input\lib\net40\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
+        <file src="input\lib\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
     </files>
 </package>
