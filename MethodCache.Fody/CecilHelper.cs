@@ -4,19 +4,11 @@
 	using System.Collections.Generic;
 	using System.Diagnostics;
 	using System.Linq;
-	using System.Reflection;
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
 
 	public static class CecilHelper
 	{
-		public static int AddVariable<T>(this MethodDefinition method)
-		{
-			method.Body.Variables.Add(method.Module.ImportVariable<T>());
-
-			return method.Body.Variables.Count - 1;
-		}
-
 		public static int AddVariable(this MethodDefinition method, TypeReference typeReference)
 		{
 			method.Body.Variables.Add(method.Module.ImportVariable(typeReference));
@@ -45,10 +37,12 @@
 		public static Instruction AppendDebugWrite(this Instruction instruction, ILProcessor processor, string message,
 			ModuleDefinition module)
 		{
-			return
-				instruction.AppendLdstr(processor, message)
-					.Append(processor.Create(OpCodes.Call, module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })),
-						processor);
+			TypeReference debug = module.TypeReferenceFromCorlib(typeof(Debug).FullName);
+
+			return instruction
+				.AppendLdstr(processor, message)
+				.Append(processor.Create(OpCodes.Call,
+					module.ImportMethod(debug, "WriteLine", module.TypeSystem.Void, new[] { module.TypeSystem.String })), processor);
 		}
 
 		public static Instruction AppendLdarg(this Instruction instruction, ILProcessor processor, int index)
@@ -76,14 +70,12 @@
 			return instruction.Append(processor.Create(OpCodes.Stloc, index), processor);
 		}
 
-		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition,
-			MemberReference attributeType)
+		public static bool ContainsAttribute(this ICustomAttributeProvider methodDefinition, Type attributeType)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
 		}
 
-		public static bool ContainsAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition,
-			string attributeTypeName)
+		public static bool ContainsAttribute(this ICustomAttributeProvider methodDefinition, string attributeTypeName)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.Name == attributeTypeName);
 		}
@@ -113,11 +105,9 @@
 		public static MethodDefinition GetMethod(this TypeDefinition typeDefinition, string methodName,
 			MemberReference returnType, ICollection<MemberReference> parameterTypes)
 		{
-			return
-				typeDefinition.Methods.SingleOrDefault(
-					x =>
-						x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
-							x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameterTypes.Select(y => y.FullName)));
+			return typeDefinition.Methods.SingleOrDefault(x =>
+				x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
+				x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameterTypes.Select(y => y.FullName)));
 		}
 
 		public static MethodDefinition GetPropertyGet(this TypeDefinition typeDefinition, string propertyName)
@@ -125,43 +115,31 @@
 			return typeDefinition.Properties.Where(x => x.Name == propertyName).Select(x => x.GetMethod).SingleOrDefault();
 		}
 
-		public static MethodReference ImportMethod<T>(this ModuleDefinition module, string methodName)
+		public static TypeReference TypeReferenceFromCorlib(this ModuleDefinition module, string fullName)
 		{
-			return module.ImportMethod(typeof(T), methodName);
+			// See http://stackoverflow.com/questions/4712265/injecting-generatedcodeattribute-with-mono-cecil
+			var corlib = (AssemblyNameReference)module.TypeSystem.Corlib;
+			var system = module.AssemblyResolver.Resolve(
+				new AssemblyNameReference("System", corlib.Version)
+				{
+					PublicKeyToken = corlib.PublicKeyToken,
+				});
+
+			return system.MainModule.GetType(fullName);
 		}
 
-		public static MethodReference ImportMethod<T>(this ModuleDefinition module, string methodName, Type[] types)
+		public static MethodReference ImportMethod(this ModuleDefinition module, TypeReference type, string methodName,
+			TypeReference returnType, TypeReference[] parameters)
 		{
-			return module.ImportMethod(typeof(T), methodName, types);
+			return module.Import(type.Resolve().Methods.Single(x =>
+				x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
+				x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameters.Select(y => y.FullName))));
 		}
 
-		public static MethodReference ImportMethod(this ModuleDefinition module, Type type, string methodName)
-		{
-			MethodInfo methodInfo = type.GetMethod(methodName);
-
-			return module.Import(methodInfo);
-		}
-
-		public static MethodReference ImportMethod(this ModuleDefinition module, Type type, string methodName, Type[] types)
-		{
-			MethodInfo methodInfo = type.GetMethod(methodName, types);
-
-			return module.Import(methodInfo);
-		}
-
-		public static TypeReference ImportType<T>(this ModuleDefinition module)
-		{
-			return module.ImportType(typeof(T));
-		}
 
 		public static TypeReference ImportType(this ModuleDefinition module, Type type)
 		{
 			return module.Import(type);
-		}
-
-		public static VariableDefinition ImportVariable<T>(this ModuleDefinition module)
-		{
-			return new VariableDefinition(module.Import(typeof(T)));
 		}
 
 		public static VariableDefinition ImportVariable(this ModuleDefinition module, TypeReference typeReference)
@@ -223,7 +201,7 @@
 			return instructionBefore;
 		}
 
-		public static void RemoveAttribute(this Mono.Cecil.ICustomAttributeProvider methodDefinition, string attributeTypeName)
+		public static void RemoveAttribute(this ICustomAttributeProvider methodDefinition, string attributeTypeName)
 		{
 			methodDefinition.CustomAttributes.Where(x => x.Constructor.DeclaringType.Name == attributeTypeName)
 				.ToList()

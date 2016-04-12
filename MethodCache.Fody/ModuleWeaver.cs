@@ -149,26 +149,26 @@
 
 		private MethodDefinition CacheTypeGetContainsMethod(TypeDefinition cacheType, string cacheTypeContainsMethodName)
 		{
-			return cacheType.GetMethod(cacheTypeContainsMethodName, cacheType.Module.ImportType<bool>(),
-				new[] { cacheType.Module.ImportType<string>() });
+			return cacheType.GetMethod(cacheTypeContainsMethodName, ModuleDefinition.TypeSystem.Boolean,
+				new[] { ModuleDefinition.TypeSystem.String });
 		}
 
 		private MethodDefinition CacheTypeGetRemoveMethod(TypeDefinition cacheType, string cacheTypeRemoveMethodName)
 		{
 			return cacheType.GetMethod(cacheTypeRemoveMethodName, ModuleDefinition.TypeSystem.Void,
-				new[] { cacheType.Module.ImportType<string>() });
+				new[] { ModuleDefinition.TypeSystem.String });
 		}
 
 		private MethodDefinition CacheTypeGetRetrieveMethod(TypeDefinition cacheType, string cacheTypeRetrieveMethodName)
 		{
 			return cacheType.GetMethod(cacheTypeRetrieveMethodName, new GenericParameter("T", cacheType),
-				new[] { cacheType.Module.ImportType<string>() });
+				new[] { ModuleDefinition.TypeSystem.String });
 		}
 
 		private MethodDefinition CacheTypeGetStoreMethod(TypeDefinition cacheInterface, string cacheTypeStoreMethodName)
 		{
-			return cacheInterface.GetMethod(cacheTypeStoreMethodName, cacheInterface.Module.ImportType(typeof(void)),
-				new[] { cacheInterface.Module.ImportType<string>(), cacheInterface.Module.ImportType<object>() });
+			return cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
+				new[] { ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object });
 		}
 
 		private bool CheckCacheTypeMethods(TypeDefinition cacheType)
@@ -214,15 +214,22 @@
 			if (LogDebugOutput)
 			{
 				// Call Debug.WriteLine with CacheKey
+				TypeReference debug = methodDefinition.Module.TypeReferenceFromCorlib(typeof(Debug).FullName);
+
 				current =
 					current.AppendLdstr(processor, "CacheKey created: {0}")
 						.AppendLdloc(processor, cacheKeyIndex)
 						.Append(
 							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object) })), processor)
+								methodDefinition.Module.ImportMethod(methodDefinition.Module.TypeSystem.String, "Format",
+									methodDefinition.Module.TypeSystem.String, new[]
+									{
+										methodDefinition.Module.TypeSystem.String,
+										methodDefinition.Module.TypeSystem.Object
+									})), processor)
 						.Append(
 							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(typeof(Debug), "WriteLine", new[] { typeof(string) })), processor);
+								methodDefinition.Module.ImportMethod(debug, "WriteLine", methodDefinition.Module.TypeSystem.Void, new[] { methodDefinition.Module.TypeSystem.String })), processor);
 			}
 
 			return current;
@@ -368,7 +375,7 @@
 				// Create object[] for string.format
 				current =
 					current.AppendLdcI4(processor, methodDefinition.Parameters.Count)
-						.Append(processor.Create(OpCodes.Newarr, methodDefinition.Module.ImportType<object>()), processor)
+						.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
 						.AppendStloc(processor, objectArrayIndex);
 
 				// Set object[] values
@@ -385,9 +392,12 @@
 				// Call string.format
 				return
 					current.AppendLdloc(processor, objectArrayIndex)
-						.Append(
-							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod<string>("Format", new[] { typeof(string), typeof(object[]) })), processor)
+						.Append(processor.Create(OpCodes.Call,
+							methodDefinition.Module.ImportMethod(methodDefinition.Module.TypeSystem.String, "Format",
+								methodDefinition.Module.TypeSystem.String, new[] {
+									methodDefinition.Module.TypeSystem.String,
+									methodDefinition.Module.TypeSystem.Object.MakeArrayType()
+								})), processor)
 						.AppendStloc(processor, cacheKeyIndex);
 			}
 		}
@@ -402,7 +412,7 @@
 			bool hasMethodLevelCache = method.ContainsAttribute(CacheAttributeName);
 			bool hasNoCacheAttribute = method.ContainsAttribute(NoCacheAttributeName);
 			bool isSpecialName = method.IsSpecialName || method.IsGetter || method.IsSetter || method.IsConstructor;
-			bool isCompilerGenerated = method.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
+			bool isCompilerGenerated = method.ContainsAttribute(typeof(CompilerGeneratedAttribute));
 
 			if (hasNoCacheAttribute || isSpecialName || isCompilerGenerated)
 			{
@@ -437,8 +447,8 @@
 			bool hasGetAccessor = property.GetMethod != null;
 			bool hasSetAccessor = property.GetMethod != null;
 			bool isAutoProperty = hasGetAccessor && hasSetAccessor &&
-				property.GetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>()) &&
-				property.SetMethod.ContainsAttribute(ModuleDefinition.ImportType<CompilerGeneratedAttribute>());
+				property.GetMethod.ContainsAttribute(typeof(CompilerGeneratedAttribute)) &&
+				property.SetMethod.ContainsAttribute(typeof(CompilerGeneratedAttribute));
 
 			if (hasNoCacheAttribute || isCacheGetter || isAutoProperty || !hasGetAccessor)
 			{
@@ -481,9 +491,9 @@
 			}
 
 			// Add local variables
-			int cacheKeyIndex = methodDefinition.AddVariable<string>();
+			int cacheKeyIndex = methodDefinition.AddVariable(ModuleDefinition.TypeSystem.String);
 			int resultIndex = methodDefinition.AddVariable(methodDefinition.ReturnType);
-			int objectArrayIndex = methodDefinition.AddVariable<object[]>();
+			int objectArrayIndex = methodDefinition.AddVariable(ModuleDefinition.TypeSystem.String.MakeArrayType());
 
 			ILProcessor processor = methodDefinition.Body.GetILProcessor();
 
@@ -628,7 +638,7 @@
 			ILProcessor processor = setter.Body.GetILProcessor();
 
 			// Add local variables
-			int cacheKeyIndex = setter.AddVariable<string>();
+			int cacheKeyIndex = setter.AddVariable(ModuleDefinition.TypeSystem.String);
 
 			// Generate CacheKeyTemplate
 			string cacheKey = CreateCacheKeyString(setter);
