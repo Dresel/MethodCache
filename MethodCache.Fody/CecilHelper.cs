@@ -2,7 +2,6 @@
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Diagnostics;
 	using System.Linq;
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
@@ -34,17 +33,6 @@
 			return instruction;
 		}
 
-		public static Instruction AppendDebugWrite(this Instruction instruction, ILProcessor processor, string message,
-			ModuleDefinition module)
-		{
-			TypeReference debug = module.TypeReferenceFromCorlib(typeof(Debug).FullName);
-
-			return instruction
-				.AppendLdstr(processor, message)
-				.Append(processor.Create(OpCodes.Call,
-					module.ImportMethod(debug, "WriteLine", module.TypeSystem.Void, new[] { module.TypeSystem.String })), processor);
-		}
-
 		public static Instruction AppendLdarg(this Instruction instruction, ILProcessor processor, int index)
 		{
 			return instruction.Append(processor.Create(OpCodes.Ldarg, index), processor);
@@ -53,6 +41,11 @@
 		public static Instruction AppendLdcI4(this Instruction instruction, ILProcessor processor, int value)
 		{
 			return instruction.Append(processor.Create(OpCodes.Ldc_I4, value), processor);
+		}
+
+		public static Instruction AppendDup(this Instruction instruction, ILProcessor processor)
+		{
+			return instruction.Append(processor.Create(OpCodes.Dup), processor);
 		}
 
 		public static Instruction AppendLdloc(this Instruction instruction, ILProcessor processor, int index)
@@ -105,9 +98,11 @@
 		public static MethodDefinition GetMethod(this TypeDefinition typeDefinition, string methodName,
 			MemberReference returnType, ICollection<MemberReference> parameterTypes)
 		{
-			return typeDefinition.Methods.SingleOrDefault(x =>
-				x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
-				x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameterTypes.Select(y => y.FullName)));
+			return
+				typeDefinition.Methods.SingleOrDefault(
+					x =>
+						x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
+							x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameterTypes.Select(y => y.FullName)));
 		}
 
 		public static MethodDefinition GetPropertyGet(this TypeDefinition typeDefinition, string propertyName)
@@ -119,23 +114,19 @@
 		{
 			// See http://stackoverflow.com/questions/4712265/injecting-generatedcodeattribute-with-mono-cecil
 			var corlib = (AssemblyNameReference)module.TypeSystem.Corlib;
-			var system = module.AssemblyResolver.Resolve(
-				new AssemblyNameReference("System", corlib.Version)
+			var system =
+				module.AssemblyResolver.Resolve(new AssemblyNameReference("System", corlib.Version)
 				{
-					PublicKeyToken = corlib.PublicKeyToken,
+					PublicKeyToken = corlib.PublicKeyToken
 				});
 
 			return system.MainModule.GetType(fullName);
 		}
 
-		public static MethodReference ImportMethod(this ModuleDefinition module, TypeReference type, string methodName,
-			TypeReference returnType, TypeReference[] parameters)
+		public static MethodReference ImportMethod(this ModuleDefinition module, MethodDefinition methodDefinition)
 		{
-			return module.Import(type.Resolve().Methods.Single(x =>
-				x.Name == methodName && x.ReturnType.FullName == returnType.FullName &&
-				x.Parameters.ToList().Select(y => y.ParameterType.FullName).IsEqualTo(parameters.Select(y => y.FullName))));
+			return module.Import(methodDefinition);
 		}
-
 
 		public static TypeReference ImportType(this ModuleDefinition module, Type type)
 		{
@@ -192,6 +183,15 @@
 			}
 
 			return genericTypeReference;
+		}
+
+		public static bool Matches(this MethodDefinition methodDefinition, string methodName, TypeReference returnType,
+			TypeReference[] parameters)
+		{
+			return methodDefinition.Name == methodName && methodDefinition.ReturnType.FullName == returnType.FullName &&
+				methodDefinition.Parameters.ToList()
+					.Select(parameter => parameter.ParameterType.FullName)
+					.IsEqualTo(parameters.Select(parameter => parameter.FullName));
 		}
 
 		public static Instruction Prepend(this Instruction instruction, Instruction instructionBefore, ILProcessor processor)

@@ -60,6 +60,7 @@
     <Compile Include="MethodsForWeaving.cs" />
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReferenceFinder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -59,6 +59,8 @@
 
 		public ModuleDefinition ModuleDefinition { get; set; }
 
+		public References References { get; set; }
+
 		private bool LogDebugOutput { get; set; }
 
 		private bool MethodCacheEnabledByDefault { get; set; }
@@ -68,6 +70,10 @@
 		public void Execute()
 		{
 			LogDebugOutput = DefineConstants.Any(x => x.ToLower() == "debug");
+
+			References = new References() { AssemblyResolver = AssemblyResolver, ModuleDefinition = ModuleDefinition };
+			References.LoadReferences();
+
 			MethodCacheEnabledByDefault = true;
 			PropertyCacheEnabledByDefault = true;
 
@@ -79,6 +85,14 @@
 			WeaveProperties(methodToWeave.Properties);
 
 			RemoveReference();
+		}
+
+		private Instruction AppendDebugWrite(Instruction instruction, ILProcessor processor, string message)
+		{
+			return instruction
+				.AppendLdstr(processor, message)
+				.Append(processor.Create(OpCodes.Call,
+					ModuleDefinition.ImportMethod(References.DebugWriteLineMethod)), processor);
 		}
 
 		private static string CreateCacheKeyString(MethodDefinition methodDefinition)
@@ -218,18 +232,18 @@
 
 				current =
 					current.AppendLdstr(processor, "CacheKey created: {0}")
+						.AppendLdcI4(processor, 1)
+						.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
+						.AppendDup(processor)
+						.AppendLdcI4(processor, 0)
 						.AppendLdloc(processor, cacheKeyIndex)
+						.Append(processor.Create(OpCodes.Stelem_Ref), processor)
 						.Append(
 							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(methodDefinition.Module.TypeSystem.String, "Format",
-									methodDefinition.Module.TypeSystem.String, new[]
-									{
-										methodDefinition.Module.TypeSystem.String,
-										methodDefinition.Module.TypeSystem.Object
-									})), processor)
+								methodDefinition.Module.ImportMethod(References.StringFormatMethod)), processor)
 						.Append(
 							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(debug, "WriteLine", methodDefinition.Module.TypeSystem.Void, new[] { methodDefinition.Module.TypeSystem.String })), processor);
+								methodDefinition.Module.ImportMethod(References.DebugWriteLineMethod)), processor);
 			}
 
 			return current;
@@ -393,11 +407,7 @@
 				return
 					current.AppendLdloc(processor, objectArrayIndex)
 						.Append(processor.Create(OpCodes.Call,
-							methodDefinition.Module.ImportMethod(methodDefinition.Module.TypeSystem.String, "Format",
-								methodDefinition.Module.TypeSystem.String, new[] {
-									methodDefinition.Module.TypeSystem.String,
-									methodDefinition.Module.TypeSystem.Object.MakeArrayType()
-								})), processor)
+							methodDefinition.Module.ImportMethod(References.StringFormatMethod)), processor)
 						.AppendStloc(processor, cacheKeyIndex);
 			}
 		}
@@ -530,7 +540,7 @@
 
 				if (LogDebugOutput)
 				{
-					returnInstruction.Previous.AppendDebugWrite(processor, "Storing to cache.", methodDefinition.Module);
+					AppendDebugWrite(returnInstruction.Previous, processor, "Storing to cache.");
 				}
 
 				if (!methodDefinition.IsStatic)
@@ -552,7 +562,7 @@
 
 			if (LogDebugOutput)
 			{
-				current = current.AppendDebugWrite(processor, "Loading from cache.", methodDefinition.Module);
+				current = AppendDebugWrite(current, processor, "Loading from cache.");
 			}
 
 			if (!methodDefinition.IsStatic)
@@ -652,7 +662,7 @@
 
 			if (LogDebugOutput)
 			{
-				current = current.AppendDebugWrite(processor, "Clearing cache.", ModuleDefinition);
+				current = AppendDebugWrite(current, processor, "Clearing cache.");
 			}
 
 			if (!setter.IsStatic)

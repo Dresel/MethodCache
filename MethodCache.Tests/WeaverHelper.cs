@@ -49,6 +49,8 @@
 			ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(newAssembly);
 			ModuleWeaver weavingTask = new ModuleWeaver { ModuleDefinition = moduleDefinition };
 
+			weavingTask.AssemblyResolver = new AssemblyResolverMock();
+
 			weavingTask.LogInfo = (message) => Debug.WriteLine(message);
 			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
 			weavingTask.LogError = (message) => new Exception(message);

@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyResolverMock.cs" />
     <Compile Include="MethodCacheDisabledAtConfigTests.cs" />
     <Compile Include="ModuleWeaverTests.cs" />
     <Compile Include="ModuleWeaverTestsBase.cs" />
