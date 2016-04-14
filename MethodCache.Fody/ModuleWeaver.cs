@@ -453,10 +453,7 @@
 			bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
 			bool isCacheGetter = property.Name == CacheGetterName;
 			bool hasGetAccessor = property.GetMethod != null;
-			bool hasSetAccessor = property.SetMethod != null;
-			bool isAutoProperty = hasGetAccessor && hasSetAccessor &&
-				property.GetMethod.ContainsAttribute(References.CompilerGeneratedAttribute) &&
-				property.SetMethod.ContainsAttribute(References.CompilerGeneratedAttribute);
+			bool isAutoProperty = hasGetAccessor && property.GetMethod.ContainsAttribute(References.CompilerGeneratedAttribute);
 
 			if (hasNoCacheAttribute || isCacheGetter || isAutoProperty || !hasGetAccessor)
 			{

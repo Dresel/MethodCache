@@ -204,7 +204,7 @@
 		}
 
 		[Test]
-		public void ClassLevelCache_ShouldNotCacheAutoproperties()
+		public void ClassLevelCache_ShouldNotCacheAutoProperties()
 		{
 			// Arrange
 			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
@@ -213,6 +213,22 @@
 			// Act
 			dynamic value = instance.AutoProperty;
 			value = instance.AutoProperty;
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreCalls == 0);
+			Assert.IsTrue(cache.NumRetrieveCalls == 0);
+		}
+
+		[Test]
+		public void ClassLevelCache_ShouldNotCacheReadOnlyAutoProperties()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic instance = WeaverHelper.CreateInstance<TestClassWithProperties>(Assembly, cache);
+
+			// Act
+			dynamic value = instance.ReadOnlyAutoProperty;
+			value = instance.ReadOnlyAutoProperty;
 
 			// Assert
 			Assert.IsTrue(cache.NumStoreCalls == 0);
