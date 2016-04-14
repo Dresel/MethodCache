@@ -63,7 +63,7 @@
 			return instruction.Append(processor.Create(OpCodes.Stloc, index), processor);
 		}
 
-		public static bool ContainsAttribute(this ICustomAttributeProvider methodDefinition, Type attributeType)
+		public static bool ContainsAttribute(this ICustomAttributeProvider methodDefinition, TypeDefinition attributeType)
 		{
 			return methodDefinition.CustomAttributes.Any(x => x.Constructor.DeclaringType.FullName == attributeType.FullName);
 		}
@@ -126,11 +126,6 @@
 		public static MethodReference ImportMethod(this ModuleDefinition module, MethodDefinition methodDefinition)
 		{
 			return module.Import(methodDefinition);
-		}
-
-		public static TypeReference ImportType(this ModuleDefinition module, Type type)
-		{
-			return module.Import(type);
 		}
 
 		public static VariableDefinition ImportVariable(this ModuleDefinition module, TypeReference typeReference)

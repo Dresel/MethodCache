@@ -228,8 +228,6 @@
 			if (LogDebugOutput)
 			{
 				// Call Debug.WriteLine with CacheKey
-				TypeReference debug = methodDefinition.Module.TypeReferenceFromCorlib(typeof(Debug).FullName);
-
 				current =
 					current.AppendLdstr(processor, "CacheKey created: {0}")
 						.AppendLdcI4(processor, 1)
@@ -422,7 +420,7 @@
 			bool hasMethodLevelCache = method.ContainsAttribute(CacheAttributeName);
 			bool hasNoCacheAttribute = method.ContainsAttribute(NoCacheAttributeName);
 			bool isSpecialName = method.IsSpecialName || method.IsGetter || method.IsSetter || method.IsConstructor;
-			bool isCompilerGenerated = method.ContainsAttribute(typeof(CompilerGeneratedAttribute));
+			bool isCompilerGenerated = method.ContainsAttribute(References.CompilerGeneratedAttribute);
 
 			if (hasNoCacheAttribute || isSpecialName || isCompilerGenerated)
 			{
@@ -455,10 +453,10 @@
 			bool hasNoCacheAttribute = property.ContainsAttribute(NoCacheAttributeName);
 			bool isCacheGetter = property.Name == CacheGetterName;
 			bool hasGetAccessor = property.GetMethod != null;
-			bool hasSetAccessor = property.GetMethod != null;
+			bool hasSetAccessor = property.SetMethod != null;
 			bool isAutoProperty = hasGetAccessor && hasSetAccessor &&
-				property.GetMethod.ContainsAttribute(typeof(CompilerGeneratedAttribute)) &&
-				property.SetMethod.ContainsAttribute(typeof(CompilerGeneratedAttribute));
+				property.GetMethod.ContainsAttribute(References.CompilerGeneratedAttribute) &&
+				property.SetMethod.ContainsAttribute(References.CompilerGeneratedAttribute);
 
 			if (hasNoCacheAttribute || isCacheGetter || isAutoProperty || !hasGetAccessor)
 			{
@@ -593,7 +591,7 @@
 				return;
 			}
 
-			if (methodDefinition.ReturnType.FullName == methodDefinition.Module.ImportType(typeof(void)).FullName)
+			if (methodDefinition.ReturnType == methodDefinition.Module.TypeSystem.Void)
 			{
 				LogWarning(string.Format("Method {0} returns void. Skip weaving of method {0}.", methodDefinition.Name));
 

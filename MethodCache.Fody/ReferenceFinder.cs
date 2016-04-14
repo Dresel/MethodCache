@@ -16,6 +16,8 @@
 
 		public MethodDefinition StringFormatMethod { get; set; }
 
+		public TypeDefinition CompilerGeneratedAttribute { get; set; }
+
 		public void LoadReferences()
 		{
 			var coreTypes = new List<TypeDefinition>();
@@ -39,6 +41,8 @@
 						method =>
 							method.Matches("Format", ModuleDefinition.TypeSystem.String,
 								new[] { ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object.MakeArrayType() }));
+
+			CompilerGeneratedAttribute = coreTypes.First(t => t.Name == "CompilerGeneratedAttribute");
 		}
 
 		private void AppendTypes(string name, List<TypeDefinition> coreTypes)
