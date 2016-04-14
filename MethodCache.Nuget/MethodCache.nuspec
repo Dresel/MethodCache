@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>MethodCache.Fody</id>
-        <version>1.4.1-alpha2</version>
+        <version>1.4.1-alpha3</version>
         <title>MethodCache.Fody</title>
         <authors>Christopher Dresel</authors>
         <owners>Christopher Dresel</owners>
