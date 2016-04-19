@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache(Members.Properties)]
+	[Attributes.Cache(Members.Properties)]
 	public class TestClassMethodsExcluded
 	{
 		public TestClassMethodsExcluded(ICache cache)
@@ -23,7 +23,7 @@
 			return x * x;
 		}
 
-		[Cache]
+		[Attributes.Cache]
 		public int MethodIncluded(int x)
 		{
 			return x * x;

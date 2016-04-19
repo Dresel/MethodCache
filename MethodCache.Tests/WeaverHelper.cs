@@ -12,23 +12,22 @@
 	{
 		public static dynamic CreateInstance<T>(Assembly assembly)
 		{
-			Type type = assembly.GetType(typeof(T).FullName);
-
-			return Activator.CreateInstance(type);
+			return Activator.CreateInstance(CreateType<T>(assembly));
 		}
 
 		public static dynamic CreateInstance<T>(Assembly assembly, object parameter)
 		{
-			Type type = assembly.GetType(typeof(T).FullName);
-
-			return Activator.CreateInstance(type, parameter);
+			return Activator.CreateInstance(CreateType<T>(assembly), parameter);
 		}
 
 		public static dynamic CreateInstance<T>(Assembly assembly, object[] parameters)
 		{
-			Type type = assembly.GetType(typeof(T).FullName);
+			return Activator.CreateInstance(CreateType<T>(assembly), parameters);
+		}
 
-			return Activator.CreateInstance(type, parameters);
+		public static Type CreateType<T>(Assembly assembly)
+		{
+			return assembly.GetType(typeof(T).FullName);
 		}
 
 		public static Assembly WeaveAssembly(string suffix, XElement config)

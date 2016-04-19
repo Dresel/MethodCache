@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache]
+	[Attributes.Cache]
 	public class TestClass9
 	{
 		// MethodOne is static, Getter is not - ModuleWeaver should check this and should skip weaving of this method

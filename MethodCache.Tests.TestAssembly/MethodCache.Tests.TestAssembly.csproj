@@ -40,14 +40,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cache\CacheAttribute.cs" />
+    <Compile Include="Cache\ComplexCacheAttribute\CacheAttribute.cs" />
+    <Compile Include="Cache\ComplexCacheAttribute\EnumType.cs" />
     <Compile Include="Cache\DictionaryCache.cs" />
+    <Compile Include="Cache\EnumParameter.cs" />
     <Compile Include="Cache\ICache.cs" />
     <Compile Include="Cache\ICacheWithRemove.cs" />
+    <Compile Include="Cache\ICacheWithStoreParameters.cs" />
     <Compile Include="TestClassAllExplicitlyIncluded.cs" />
     <Compile Include="TestClassMethodsExcluded.cs" />
     <Compile Include="TestClassPropertiesExcluded.cs" />
     <Compile Include="TestClassStaticProperties.cs" />
     <Compile Include="TestClassIndividualProperties.cs" />
+    <Compile Include="TestClassWithParameterizedCacheAttribute.cs" />
     <Compile Include="TestClassWithProperties.cs" />
     <Compile Include="MethodResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

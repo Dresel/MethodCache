@@ -2,7 +2,7 @@
 {
 	using System.Collections.Generic;
 
-	public class DictionaryCache : ICache, ICacheWithRemove
+	public class DictionaryCache : ICache, ICacheWithRemove, ICacheWithStoreParameters
 	{
 		public DictionaryCache()
 		{
@@ -15,7 +15,11 @@
 
 		public int NumStoreCalls { get; private set; }
 
-		private Dictionary<string, object> Storage { get; set; }
+		public int NumStoreParameterCalls { get; private set; }
+
+		public IDictionary<string, object> ParametersPassedToLastStoreCall { get; set; }
+
+		private Dictionary<string, object> Storage { get; }
 
 		public bool Contains(string key)
 		{
@@ -39,6 +43,15 @@
 		public void Store(string key, object data)
 		{
 			NumStoreCalls++;
+
+			Storage[key] = data;
+		}
+
+		void ICacheWithStoreParameters.Store(string key, object data, IDictionary<string, object> parameters)
+		{
+			NumStoreParameterCalls++;
+
+			ParametersPassedToLastStoreCall = new Dictionary<string, object>(parameters);
 
 			Storage[key] = data;
 		}

@@ -1,43 +1,44 @@
 ﻿namespace MethodCache.Fody
 {
+	using System;
 	using System.Collections.Generic;
 	using Mono.Cecil;
 
 	internal class MethodsForWeaving
 	{
-		private readonly IList<MethodDefinition> methods;
+		private readonly IList<Tuple<MethodDefinition, CustomAttribute>> methods;
 
-		private readonly IList<PropertyDefinition> properties;
+		private readonly IList<Tuple<PropertyDefinition, CustomAttribute>> properties;
 
 		public MethodsForWeaving()
 		{
-			this.methods = new List<MethodDefinition>();
-			this.properties = new List<PropertyDefinition>();
+			this.methods = new List<Tuple<MethodDefinition, CustomAttribute>>();
+			this.properties = new List<Tuple<PropertyDefinition, CustomAttribute>>();
 		}
 
-		public IEnumerable<MethodDefinition> Methods
+		public IEnumerable<Tuple<MethodDefinition, CustomAttribute>> Methods
 		{
 			get { return this.methods; }
 		}
 
-		public IEnumerable<PropertyDefinition> Properties
+		public IEnumerable<Tuple<PropertyDefinition, CustomAttribute>> Properties
 		{
 			get { return this.properties; }
 		}
 
-		public void Add(MethodDefinition method)
+		public void Add(MethodDefinition method, CustomAttribute attribute)
 		{
-			this.methods.Add(method);
+			this.methods.Add(new Tuple<MethodDefinition, CustomAttribute>(method, attribute));
 		}
 
-		public void Add(PropertyDefinition property)
+		public void Add(PropertyDefinition property, CustomAttribute attribute)
 		{
 			if (property.GetMethod == null)
 			{
 				return;
 			}
 
-			this.properties.Add(property);
+			this.properties.Add(new Tuple<PropertyDefinition, CustomAttribute>(property, attribute));
 		}
 	}
 }

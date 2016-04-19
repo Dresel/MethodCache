@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache(Members.All)]
+	[Attributes.Cache(Members.All)]
 	public class TestClassAllExplicitlyIncluded
 	{
 		public TestClassAllExplicitlyIncluded(ICache cache)

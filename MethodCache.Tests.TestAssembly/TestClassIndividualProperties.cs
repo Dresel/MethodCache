@@ -14,18 +14,18 @@
 			Cache = cache;
 		}
 
-		[Cache]
+		[Attributes.Cache]
 		public int AutoProperty { get; set; }
 
 		public ICacheWithRemove Cache { get; private set; }
 
-		[Cache]
+		[Attributes.Cache]
 		public string ReadOnlyProperty
 		{
 			get { return "some value"; }
 		}
 
-		[Cache]
+		[Attributes.Cache]
 
 		// ReSharper disable once ConvertToAutoProperty
 		public int ReadWriteProperty
@@ -34,7 +34,7 @@
 			set { this.someValue = value; }
 		}
 
-		[Cache]
+		[Attributes.Cache]
 		public string SetOnlyProperty
 		{
 			set { this.field = value; }
