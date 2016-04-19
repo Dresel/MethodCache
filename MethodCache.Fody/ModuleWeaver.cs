@@ -529,7 +529,7 @@
 			// Add local variables
 			int cacheKeyIndex = methodDefinition.AddVariable(ModuleDefinition.TypeSystem.String);
 			int resultIndex = methodDefinition.AddVariable(methodDefinition.ReturnType);
-			int objectArrayIndex = methodDefinition.AddVariable(ModuleDefinition.TypeSystem.String.MakeArrayType());
+			int objectArrayIndex = methodDefinition.AddVariable(ModuleDefinition.TypeSystem.Object.MakeArrayType());
 
 			ILProcessor processor = methodDefinition.Body.GetILProcessor();
 
