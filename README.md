@@ -212,6 +212,110 @@ Now all the preparation is done and you can start with the real work. The classe
 
 ... and let MethodCache do the rest.
 
+## CacheAttribute Parameters Support (since 1.5)
+
+For fine-grained cache control you can use a custom `CacheAttribute` and add properties or fields which you can set on class or method level. This parameters will be passed to the Store function.
+
+See the following example which uses the `System.Runtime.Caching.ObjectCache` in combination with `System.Runtime.Caching.CacheItemPolicy` and a custom `CacheAttribute` with a property named Duration to control the cache duration.
+
+	// Use a custom CacheAttribute
+
+	public class CacheAttribute : Attribute
+	{
+		// You can use all types that are valid Attribute parameter types
+		public int Duration { get; set; }
+	}
+	
+	// Decorate you classes
+
+	public class ClassToCache
+	{
+		public ClassToCache(ICache cache)
+		{
+			Cache = cache;
+		}
+
+		protected ICache Cache { get; set; }
+
+		// Note: Only works when set as named parameter
+		[Cache(Duration = 5000)]
+		public int ShortTermFunction()
+		{
+			return 0;
+		}
+
+		[Cache]
+		public int LongTermFunction()
+		{
+			return 0;
+		}
+	}
+
+	// Use the new void Store(string key, object data, IDictionary<string, object> parameters) signature
+
+	public class ObjectCacheAdapter
+	{
+		public ObjectCacheAdapter(ObjectCache objectCache)
+		{
+			ObjectCache = objectCache;
+		}
+
+		protected ObjectCache ObjectCache { get; set; }
+
+		// Note: The methods Contains, Retrieve, Store (and Remove) must exactly look like the following:
+		public bool Contains(string key)
+		{
+			return ObjectCache.Contains(key);
+		}
+
+		public T Retrieve<T>(string key)
+		{
+			return (T) ObjectCache.GetCacheItem(key).Value;
+		}
+
+		public void Store(string key, object data, IDictionary<string, object> parameters)
+		{
+			CacheItemPolicy cacheItemPolicy = null;
+
+			// Create a CacheItemPolicy instance if Duration is set
+			if (parameters.ContainsKey("Duration"))
+			{
+				cacheItemPolicy = new CacheItemPolicy()
+				{
+					AbsoluteExpiration = DateTimeOffset.Now.AddMilliseconds((int)parameters["Duration"])
+				};
+			}
+
+			ObjectCache.Add(key, data, cacheItemPolicy);
+		}
+
+		// Remove is needed for writeable properties which must invalidate the Cache
+		// You can skip this method but then only readonly properties are supported
+		public void Remove(string key)
+		{
+			ObjectCache.Remove(key);
+		}
+	}
+
+Class level named attribute parameters are overriden by method level attribute parameters (even if not set):
+
+	[Cache.Cache(Parameter1 = "CacheParameter", Parameter2 = 1)]
+	public class TestClassWithParameterizedCacheAttribute
+	{
+	    // Store calls for this method will contain Parameter1 and Parameter2
+	    public int SomeMethod()
+		{
+			return 0;
+		}
+		
+	    // Store calls for this method will contain Parameter2 and Parameter3
+        [Cache.Cache(Parameter2 = 2, Parameter3 = true)]
+	    public int SomeOverriddenMethod()
+		{
+			return 0;
+		}
+	}
+
 ## Miscellaneous
 
 ### Choosing what to cache
@@ -251,6 +355,9 @@ For production I would suggest using some DI framework and creating an ICache in
 		T Retrieve<T>(string key);
 
 		void Store(string key, object data);
+
+		// For CacheAttribute parameter support use the following
+		// void Store(string key, object data, IDictionary<string, object> parameters)
 		
 		void Remove(string key);
 	}
