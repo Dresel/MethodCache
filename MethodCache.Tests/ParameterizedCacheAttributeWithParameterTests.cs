@@ -343,6 +343,25 @@
 		}
 
 		[Test]
+		public void TestClassWithParameterizedCacheAttributeMethodLevelCacheAttributeAlsoWorksForFields()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic testClass1 = WeaverHelper.CreateInstance<TestClassWithParameterizedCacheAttribute>(Assembly, cache);
+
+			// Act
+			testClass1.CacheParameterMethodWithField("1", 2);
+			testClass1.CacheParameterMethodWithField("1", 2);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 2);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["Parameter3"] == true);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["parameter3"] == 0);
+		}
+
+		[Test]
 		public void TestClassWithParameterizedCacheAttributeMethodLevelCacheAttributeOverridesParameters()
 		{
 			// Arrange

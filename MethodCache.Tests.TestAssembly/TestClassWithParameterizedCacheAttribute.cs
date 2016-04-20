@@ -20,6 +20,12 @@
 			return argument1 + argument2;
 		}
 
+		[Cache.Cache(Parameter3 = true, parameter3 = 0)]
+		public string CacheParameterMethodWithField(string argument1, int argument2)
+		{
+			return argument1 + argument2;
+		}
+
 		[Cache.ComplexCacheAttribute.Cache(ParameterBoolArray = new bool[] { false, true },
 			ParameterByteArray = new byte[] { Byte.MinValue, Byte.MaxValue },
 			ParameterCharacterArray = new char[] { Char.MinValue, Char.MaxValue },

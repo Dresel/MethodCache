@@ -9,5 +9,7 @@
 		public int Parameter2 { get; set; }
 
 		public bool Parameter3 { get; set; }
+
+		public double parameter3;
 	}
 }

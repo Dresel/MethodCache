@@ -590,7 +590,7 @@
 						.Append(processor.Create(OpCodes.Newobj,
 							methodDefinition.Module.Import(References.DictionaryConstructor)), processor);
 
-					foreach (CustomAttributeNamedArgument property in attribute.Properties)
+					foreach (CustomAttributeNamedArgument property in attribute.Properties.Union(attribute.Fields))
 					{
 						returnInstruction.Previous
 							.AppendDup(processor)
