@@ -179,7 +179,7 @@
 		private MethodDefinition CacheTypeGetStoreMethod(TypeDefinition cacheInterface, string cacheTypeStoreMethodName)
 		{
 			// Prioritize Store methods with parameters Dictionary
-			var methodDefinition = cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
+			MethodDefinition methodDefinition = cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
 				new[]
 				{
 					ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object,
