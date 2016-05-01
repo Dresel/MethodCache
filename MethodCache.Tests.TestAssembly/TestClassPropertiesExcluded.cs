@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache(Members.Methods)]
+	[Attributes.Cache(Members.Methods)]
 	public class TestClassPropertiesExcluded
 	{
 		public TestClassPropertiesExcluded(ICache cache)
@@ -13,7 +13,7 @@
 
 		public ICache Cache { get; private set; }
 
-		[Cache]
+		[Attributes.Cache]
 		public string ExplicitlyCachedProperty
 		{
 			get { return "some value"; }

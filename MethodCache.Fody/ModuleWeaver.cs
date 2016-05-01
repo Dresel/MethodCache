@@ -2,9 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Diagnostics;
 	using System.Linq;
-	using System.Runtime.CompilerServices;
 	using System.Text;
 	using System.Text.RegularExpressions;
 	using System.Xml.Linq;
@@ -87,14 +85,6 @@
 			RemoveReference();
 		}
 
-		private Instruction AppendDebugWrite(Instruction instruction, ILProcessor processor, string message)
-		{
-			return instruction
-				.AppendLdstr(processor, message)
-				.Append(processor.Create(OpCodes.Call,
-					ModuleDefinition.ImportMethod(References.DebugWriteLineMethod)), processor);
-		}
-
 		private static string CreateCacheKeyString(MethodDefinition methodDefinition)
 		{
 			StringBuilder builder = new StringBuilder();
@@ -127,6 +117,13 @@
 				methodDefinition.DeclaringType.BaseType.Resolve().GetInheritedPropertyGet(CacheGetterName);
 
 			return propertyGet;
+		}
+
+		private Instruction AppendDebugWrite(Instruction instruction, ILProcessor processor, string message)
+		{
+			return instruction
+				.AppendLdstr(processor, message)
+				.Append(processor.Create(OpCodes.Call, ModuleDefinition.ImportMethod(References.DebugWriteLineMethod)), processor);
 		}
 
 		private bool CacheAttributeConstructedWithParam(CustomAttribute attribute, Members cachedMembers)
@@ -181,6 +178,20 @@
 
 		private MethodDefinition CacheTypeGetStoreMethod(TypeDefinition cacheInterface, string cacheTypeStoreMethodName)
 		{
+			// Prioritize Store methods with parameters Dictionary
+			MethodDefinition methodDefinition = cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
+				new[]
+				{
+					ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object,
+					References.DictionaryInterface.MakeGenericInstanceType(ModuleDefinition.TypeSystem.String,
+						ModuleDefinition.TypeSystem.Object)
+				});
+
+			if (methodDefinition != null)
+			{
+				return methodDefinition;
+			}
+
 			return cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
 				new[] { ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object });
 		}
@@ -222,26 +233,34 @@
 				Config.Attributes().Any(x => x.Name.ToString().ToLower() == name.ToLower() && x.Value.ToLower() == value.ToLower());
 		}
 
+		private IDictionary<string, CustomAttributeArgument> GetCacheAttributeConstructorFields(CustomAttribute attribute)
+		{
+			return attribute.Fields.ToDictionary(field => field.Name, field => field.Argument);
+		}
+
+		private IDictionary<string, CustomAttributeArgument> GetCacheAttributeConstructorParameters(CustomAttribute attribute)
+		{
+			return attribute.Properties.ToDictionary(property => property.Name, property => property.Argument);
+		}
+
 		private Instruction InjectCacheKeyCreatedCode(MethodDefinition methodDefinition, Instruction current,
 			ILProcessor processor, int cacheKeyIndex)
 		{
 			if (LogDebugOutput)
 			{
 				// Call Debug.WriteLine with CacheKey
-				current =
-					current.AppendLdstr(processor, "CacheKey created: {0}")
-						.AppendLdcI4(processor, 1)
-						.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
-						.AppendDup(processor)
-						.AppendLdcI4(processor, 0)
-						.AppendLdloc(processor, cacheKeyIndex)
-						.Append(processor.Create(OpCodes.Stelem_Ref), processor)
-						.Append(
-							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(References.StringFormatMethod)), processor)
-						.Append(
-							processor.Create(OpCodes.Call,
-								methodDefinition.Module.ImportMethod(References.DebugWriteLineMethod)), processor);
+				current = current
+					.AppendLdstr(processor, "CacheKey created: {0}")
+					.AppendLdcI4(processor, 1)
+					.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
+					.AppendDup(processor)
+					.AppendLdcI4(processor, 0)
+					.AppendLdloc(processor, cacheKeyIndex)
+					.Append(processor.Create(OpCodes.Stelem_Ref), processor)
+					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod(References.StringFormatMethod)),
+						processor)
+					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod(References.DebugWriteLineMethod)),
+						processor);
 			}
 
 			return current;
@@ -351,7 +370,13 @@
 				{
 					if (ShouldWeaveMethod(method))
 					{
-						result.Add(method);
+						// Store Cache attribute, method attribute takes precedence over class attributes
+						CustomAttribute attribute =
+							method.CustomAttributes.SingleOrDefault(x => x.Constructor.DeclaringType.Name == CacheAttributeName) ??
+								method.DeclaringType.CustomAttributes.SingleOrDefault(
+									x => x.Constructor.DeclaringType.Name == CacheAttributeName);
+
+						result.Add(method, attribute);
 					}
 
 					method.RemoveAttribute(CacheAttributeName);
@@ -362,7 +387,13 @@
 				{
 					if (ShouldWeaveProperty(property))
 					{
-						result.Add(property);
+						// Store Cache attribute, property attribute takes precedence over class attributes
+						CustomAttribute attribute =
+							property.CustomAttributes.SingleOrDefault(x => x.Constructor.DeclaringType.Name == CacheAttributeName) ??
+								property.DeclaringType.CustomAttributes.SingleOrDefault(
+									x => x.Constructor.DeclaringType.Name == CacheAttributeName);
+
+						result.Add(property, attribute);
 					}
 
 					property.RemoveAttribute(CacheAttributeName);
@@ -385,28 +416,28 @@
 			else
 			{
 				// Create object[] for string.format
-				current =
-					current.AppendLdcI4(processor, methodDefinition.Parameters.Count)
-						.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
-						.AppendStloc(processor, objectArrayIndex);
+				current = current
+					.AppendLdcI4(processor, methodDefinition.Parameters.Count)
+					.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
+					.AppendStloc(processor, objectArrayIndex);
 
 				// Set object[] values
 				for (int i = 0; i < methodDefinition.Parameters.Count; i++)
 				{
-					current =
-						current.AppendLdloc(processor, objectArrayIndex)
-							.AppendLdcI4(processor, i)
-							.AppendLdarg(processor, !methodDefinition.IsStatic ? i + 1 : i)
-							.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
-							.Append(processor.Create(OpCodes.Stelem_Ref), processor);
+					current = current
+						.AppendLdloc(processor, objectArrayIndex)
+						.AppendLdcI4(processor, i)
+						.AppendLdarg(processor, !methodDefinition.IsStatic ? i + 1 : i)
+						.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
+						.Append(processor.Create(OpCodes.Stelem_Ref), processor);
 				}
 
 				// Call string.format
-				return
-					current.AppendLdloc(processor, objectArrayIndex)
-						.Append(processor.Create(OpCodes.Call,
-							methodDefinition.Module.ImportMethod(References.StringFormatMethod)), processor)
-						.AppendStloc(processor, cacheKeyIndex);
+				return current
+					.AppendLdloc(processor, objectArrayIndex)
+					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod(References.StringFormatMethod)),
+						processor)
+					.AppendStloc(processor, cacheKeyIndex);
 			}
 		}
 
@@ -477,7 +508,7 @@
 			return false;
 		}
 
-		private void WeaveMethod(MethodDefinition methodDefinition, MethodDefinition propertyGet)
+		private void WeaveMethod(MethodDefinition methodDefinition, CustomAttribute attribute, MethodDefinition propertyGet)
 		{
 			methodDefinition.Body.InitLocals = true;
 
@@ -522,11 +553,11 @@
 				methodDefinition.Module.Import(CacheTypeGetContainsMethod(propertyGetReturnTypeDefinition,
 					CacheTypeContainsMethodName));
 
-			current =
-				current.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
-					.AppendLdloc(processor, cacheKeyIndex)
-					.Append(processor.Create(OpCodes.Callvirt, methodReferenceContain), processor)
-					.Append(processor.Create(OpCodes.Brfalse, firstInstruction), processor);
+			current = current
+				.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
+				.AppendLdloc(processor, cacheKeyIndex)
+				.Append(processor.Create(OpCodes.Callvirt, methodReferenceContain), processor)
+				.Append(processor.Create(OpCodes.Brfalse, firstInstruction), processor);
 
 			// False branche (store value in cache of each return instruction)
 			foreach (Instruction returnInstruction in returnInstructions)
@@ -543,15 +574,38 @@
 					returnInstruction.Previous.AppendLdarg(processor, 0);
 				}
 
-				MethodReference methodReferenceReturn =
+				MethodReference methodReferenceStore =
 					methodDefinition.Module.Import(CacheTypeGetStoreMethod(propertyGetReturnTypeDefinition, CacheTypeStoreMethodName));
 
-				returnInstruction.Previous.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)),
-					processor)
+				returnInstruction.Previous
+					.Append(processor.Create(OpCodes.Call, methodDefinition.Module.Import(propertyGet)), processor)
 					.AppendLdloc(processor, cacheKeyIndex)
 					.AppendLdloc(processor, resultIndex)
-					.AppendBoxIfNecessary(processor, methodDefinition.ReturnType)
-					.Append(processor.Create(OpCodes.Callvirt, methodReferenceReturn), processor)
+					.AppendBoxIfNecessary(processor, methodDefinition.ReturnType);
+
+				// Pass parameters to Store method if supported
+				if (methodReferenceStore.Parameters.Count == 3)
+				{
+					returnInstruction.Previous
+						.Append(processor.Create(OpCodes.Newobj,
+							methodDefinition.Module.Import(References.DictionaryConstructor)), processor);
+
+					foreach (CustomAttributeNamedArgument property in attribute.Properties.Union(attribute.Fields))
+					{
+						returnInstruction.Previous
+							.AppendDup(processor)
+							.AppendLdstr(processor, property.Name)
+							.AppendLd(processor, property.Argument, References)
+							.AppendBoxIfNecessary(processor,
+								property.Argument.Type != ModuleDefinition.TypeSystem.Object
+									? property.Argument.Type : ((CustomAttributeArgument)property.Argument.Value).Type)
+							.Append(processor.Create(OpCodes.Callvirt, methodDefinition.Module.Import(References.DictionaryAddMethod)),
+								processor);
+					}
+				}
+
+				returnInstruction.Previous
+					.Append(processor.Create(OpCodes.Callvirt, methodReferenceStore), processor)
 					.AppendLdloc(processor, resultIndex);
 			}
 
@@ -579,7 +633,7 @@
 			methodDefinition.Body.OptimizeMacros();
 		}
 
-		private void WeaveMethod(MethodDefinition methodDefinition)
+		private void WeaveMethod(MethodDefinition methodDefinition, CustomAttribute attribute)
 		{
 			MethodDefinition propertyGet = GetCacheGetter(methodDefinition);
 
@@ -597,25 +651,28 @@
 
 			LogInfo(string.Format("Weaving method {0}::{1}.", methodDefinition.DeclaringType.Name, methodDefinition.Name));
 
-			WeaveMethod(methodDefinition, propertyGet);
+			WeaveMethod(methodDefinition, attribute, propertyGet);
 		}
 
-		private void WeaveMethods(IEnumerable<MethodDefinition> methodDefinitions)
+		private void WeaveMethods(IEnumerable<Tuple<MethodDefinition, CustomAttribute>> methodDefinitions)
 		{
-			foreach (MethodDefinition methodDefinition in methodDefinitions)
+			foreach (Tuple<MethodDefinition, CustomAttribute> methodDefinition in methodDefinitions)
 			{
-				WeaveMethod(methodDefinition);
+				WeaveMethod(methodDefinition.Item1, methodDefinition.Item2);
 			}
 		}
 
-		private void WeaveProperties(IEnumerable<PropertyDefinition> properties)
+		private void WeaveProperties(IEnumerable<Tuple<PropertyDefinition, CustomAttribute>> properties)
 		{
-			foreach (PropertyDefinition property in properties)
+			foreach (Tuple<PropertyDefinition, CustomAttribute> propertyTuple in properties)
 			{
+				PropertyDefinition property = propertyTuple.Item1;
+				CustomAttribute attribute = propertyTuple.Item2;
+
 				// Get-Only Property, weave like normal methods
 				if (property.SetMethod == null)
 				{
-					WeaveMethod(property.GetMethod);
+					WeaveMethod(property.GetMethod, attribute);
 				}
 				else
 				{
@@ -628,7 +685,7 @@
 
 					LogInfo(string.Format("Weaving property {0}::{1}.", property.DeclaringType.Name, property.Name));
 
-					WeaveMethod(property.GetMethod, propertyGet);
+					WeaveMethod(property.GetMethod, attribute, propertyGet);
 					WeavePropertySetter(property.SetMethod, propertyGet);
 				}
 			}
@@ -665,12 +722,11 @@
 				current = current.AppendLdarg(processor, 0);
 			}
 
-			current.Append(processor.Create(OpCodes.Call, setter.Module.Import(propertyGet)), processor)
+			current
+				.Append(processor.Create(OpCodes.Call, setter.Module.Import(propertyGet)), processor)
 				.AppendLdloc(processor, cacheKeyIndex)
-				.Append(
-					processor.Create(OpCodes.Callvirt,
-						setter.Module.Import(CacheTypeGetRemoveMethod(propertyGet.ReturnType.Resolve(), CacheTypeRemoveMethodName))),
-					processor);
+				.Append(processor.Create(OpCodes.Callvirt, setter.Module.Import(
+					CacheTypeGetRemoveMethod(propertyGet.ReturnType.Resolve(), CacheTypeRemoveMethodName))), processor);
 
 			setter.Body.OptimizeMacros();
 		}

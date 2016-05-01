@@ -10,7 +10,7 @@
 		{
 		}
 
-		[Cache]
+		[Attributes.Cache]
 		public int MethodThree(int x)
 		{
 			return x * x * x;

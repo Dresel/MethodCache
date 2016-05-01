@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache]
+	[Attributes.Cache]
 	public class TestClass7
 	{
 		public TestClass7(ICache cache)

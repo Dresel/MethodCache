@@ -12,7 +12,7 @@
 
 		public ICache Cache { get; set; }
 
-		[Cache]
+		[Attributes.Cache]
 		public int MethodOne(int x)
 		{
 			return x * x;

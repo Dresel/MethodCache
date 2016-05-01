@@ -3,7 +3,7 @@
 	using MethodCache.Attributes;
 	using MethodCache.Tests.TestAssembly.Cache;
 
-	[Cache]
+	[Attributes.Cache]
 	public class TestClassWithProperties
 	{
 		private string field;

@@ -20,12 +20,12 @@
 		{
 			if (fullName == "System")
 			{
-				var codeBase = typeof(Debug).Assembly.CodeBase.Replace("file:///", "");
+				string codeBase = typeof(Debug).Assembly.CodeBase.Replace("file:///", "");
 				return AssemblyDefinition.ReadAssembly(codeBase);
 			}
 			else
 			{
-				var codeBase = typeof(string).Assembly.CodeBase.Replace("file:///", "");
+				string codeBase = typeof(string).Assembly.CodeBase.Replace("file:///", "");
 				return AssemblyDefinition.ReadAssembly(codeBase);
 			}
 		}
