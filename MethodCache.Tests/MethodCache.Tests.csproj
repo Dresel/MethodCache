@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyResolverMock.cs" />
+    <Compile Include="GenericTests.cs" />
     <Compile Include="ParameterizedCacheAttributeWithParameterTests.cs" />
     <Compile Include="MethodCacheDisabledAtConfigTests.cs" />
     <Compile Include="ModuleWeaverTests.cs" />

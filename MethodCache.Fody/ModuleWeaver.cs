@@ -100,7 +100,7 @@
 			{
 				builder.Append(methodDefinition.Name);
 
-				for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+				for (int i = 0; i < methodDefinition.Parameters.Count + methodDefinition.GenericParameters.Count; i++)
 				{
 					builder.Append(string.Format("_{{{0}}}", i));
 				}
@@ -416,17 +416,31 @@
 			else
 			{
 				// Create object[] for string.format
+				int parameterCount = methodDefinition.Parameters.Count + methodDefinition.GenericParameters.Count;
+
 				current = current
-					.AppendLdcI4(processor, methodDefinition.Parameters.Count)
+					.AppendLdcI4(processor, parameterCount)
 					.Append(processor.Create(OpCodes.Newarr, ModuleDefinition.TypeSystem.Object), processor)
 					.AppendStloc(processor, objectArrayIndex);
 
+
 				// Set object[] values
-				for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+				for (int i = 0; i < methodDefinition.GenericParameters.Count; i++)
 				{
 					current = current
 						.AppendLdloc(processor, objectArrayIndex)
 						.AppendLdcI4(processor, i)
+						.Append(processor.Create(OpCodes.Ldtoken, methodDefinition.GenericParameters[i]), processor)
+						.Append(processor.Create(OpCodes.Call, methodDefinition.Module.ImportMethod(References.SystemTypeGetTypeFromHandleMethod)),
+						processor)
+						.Append(processor.Create(OpCodes.Stelem_Ref), processor);
+				}
+
+				for (int i = 0; i < methodDefinition.Parameters.Count; i++)
+				{
+					current = current
+						.AppendLdloc(processor, objectArrayIndex)
+						.AppendLdcI4(processor, methodDefinition.GenericParameters.Count + i)
 						.AppendLdarg(processor, !methodDefinition.IsStatic ? i + 1 : i)
 						.AppendBoxIfNecessary(processor, methodDefinition.Parameters[i].ParameterType)
 						.Append(processor.Create(OpCodes.Stelem_Ref), processor);
@@ -508,11 +522,16 @@
 			return false;
 		}
 
-		private void WeaveMethod(MethodDefinition methodDefinition, CustomAttribute attribute, MethodDefinition propertyGet)
+		private void WeaveMethod(MethodDefinition methodDefinition, CustomAttribute attribute, MethodReference propertyGet)
 		{
 			methodDefinition.Body.InitLocals = true;
 
 			methodDefinition.Body.SimplifyMacros();
+
+			if (propertyGet.DeclaringType.HasGenericParameters)
+			{
+				propertyGet = propertyGet.MakeHostInstanceGeneric(propertyGet.DeclaringType.GenericParameters.Cast<TypeReference>().ToArray());
+			}
 
 			Instruction firstInstruction = methodDefinition.Body.Instructions.First();
 
@@ -544,7 +563,7 @@
 
 			TypeDefinition propertyGetReturnTypeDefinition = propertyGet.ReturnType.Resolve();
 
-			if (!methodDefinition.IsStatic)
+			if (!propertyGet.Resolve().IsStatic)
 			{
 				current = current.AppendLdarg(processor, 0);
 			}
@@ -569,7 +588,7 @@
 					AppendDebugWrite(returnInstruction.Previous, processor, "Storing to cache.");
 				}
 
-				if (!methodDefinition.IsStatic)
+				if (!propertyGet.Resolve().IsStatic)
 				{
 					returnInstruction.Previous.AppendLdarg(processor, 0);
 				}
@@ -614,7 +633,7 @@
 				current = AppendDebugWrite(current, processor, "Loading from cache.");
 			}
 
-			if (!methodDefinition.IsStatic)
+			if (!propertyGet.Resolve().IsStatic)
 			{
 				current = current.AppendLdarg(processor, 0);
 			}
@@ -691,10 +710,15 @@
 			}
 		}
 
-		private void WeavePropertySetter(MethodDefinition setter, MethodDefinition propertyGet)
+		private void WeavePropertySetter(MethodDefinition setter, MethodReference propertyGet)
 		{
 			setter.Body.InitLocals = true;
 			setter.Body.SimplifyMacros();
+
+			if (propertyGet.DeclaringType.HasGenericParameters)
+			{
+				propertyGet = propertyGet.MakeHostInstanceGeneric(propertyGet.DeclaringType.GenericParameters.Cast<TypeReference>().ToArray());
+			}
 
 			Instruction firstInstruction = setter.Body.Instructions.First();
 			ILProcessor processor = setter.Body.GetILProcessor();
@@ -717,7 +741,7 @@
 				current = AppendDebugWrite(current, processor, "Clearing cache.");
 			}
 
-			if (!setter.IsStatic)
+			if (!propertyGet.Resolve().IsStatic)
 			{
 				current = current.AppendLdarg(processor, 0);
 			}

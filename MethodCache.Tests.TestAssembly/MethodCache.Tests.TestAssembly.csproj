@@ -49,6 +49,7 @@
     <Compile Include="Cache\ICacheWithRemove.cs" />
     <Compile Include="Cache\ICacheWithStoreParameters.cs" />
     <Compile Include="TestClassAllExplicitlyIncluded.cs" />
+    <Compile Include="TestClassGeneric.cs" />
     <Compile Include="TestClassMethodsExcluded.cs" />
     <Compile Include="TestClassPropertiesExcluded.cs" />
     <Compile Include="TestClassStaticProperties.cs" />

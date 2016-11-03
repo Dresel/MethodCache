@@ -26,7 +26,7 @@
 		public static Instruction AppendBoxIfNecessary(this Instruction instruction, ILProcessor processor,
 			TypeReference typeReference)
 		{
-			if (typeReference.IsValueType)
+			if (typeReference.IsValueType || typeReference.IsGenericParameter)
 			{
 				return instruction.Append(processor.Create(OpCodes.Box, typeReference), processor);
 			}
