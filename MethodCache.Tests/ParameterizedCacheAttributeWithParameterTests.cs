@@ -105,7 +105,7 @@
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
 
-			var type = (dynamic)WeaverHelper.CreateType<EnumType>(Assembly);
+			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 
 			Assert.IsInstanceOfType(type, cache.ParametersPassedToLastStoreCall["ParameterEnum"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterEnum"] ==
@@ -126,8 +126,8 @@
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
 
-			var type = (dynamic)WeaverHelper.CreateType<EnumType>(Assembly);
-			var typeArray = (dynamic)WeaverHelper.CreateType<EnumType[]>(Assembly);
+			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
+			dynamic typeArray = WeaverHelper.CreateType<EnumType[]>(Assembly);
 
 			Assert.IsInstanceOfType(typeArray, cache.ParametersPassedToLastStoreCall["ParameterEnumArray"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterEnumArray"][0] ==
@@ -200,7 +200,7 @@
 			testClass1.ComplexCacheParameterMethodObjectArray();
 
 			// Assert
-			var type = (dynamic)WeaverHelper.CreateType<EnumType>(Assembly);
+			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
@@ -247,7 +247,7 @@
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
 
-			var type = (dynamic)WeaverHelper.CreateType<EnumType>(Assembly);
+			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 
 			Assert.IsInstanceOfType(type, cache.ParametersPassedToLastStoreCall["ParameterObject"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"] ==
@@ -340,6 +340,25 @@
 			Assert.IsInstanceOfType(typeof(Type[]), cache.ParametersPassedToLastStoreCall["ParameterTypeArray"]);
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterTypeArray"][0] == typeof(List<int>));
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterTypeArray"][1] == typeof(List<string>));
+		}
+
+		[Test]
+		public void TestClassWithParameterizedCacheAttributeMethodLevelCacheAttributeAlsoWorksForFields()
+		{
+			// Arrange
+			dynamic cache = WeaverHelper.CreateInstance<DictionaryCache>(Assembly);
+			dynamic testClass1 = WeaverHelper.CreateInstance<TestClassWithParameterizedCacheAttribute>(Assembly, cache);
+
+			// Act
+			testClass1.CacheParameterMethodWithField("1", 2);
+			testClass1.CacheParameterMethodWithField("1", 2);
+
+			// Assert
+			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
+			Assert.IsTrue(cache.NumRetrieveCalls == 1);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 2);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["Parameter3"] == true);
+			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["parameter3"] == 0);
 		}
 
 		[Test]

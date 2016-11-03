@@ -179,7 +179,7 @@
 		private MethodDefinition CacheTypeGetStoreMethod(TypeDefinition cacheInterface, string cacheTypeStoreMethodName)
 		{
 			// Prioritize Store methods with parameters Dictionary
-			var methodDefinition = cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
+			MethodDefinition methodDefinition = cacheInterface.GetMethod(cacheTypeStoreMethodName, ModuleDefinition.TypeSystem.Void,
 				new[]
 				{
 					ModuleDefinition.TypeSystem.String, ModuleDefinition.TypeSystem.Object,
@@ -590,7 +590,7 @@
 						.Append(processor.Create(OpCodes.Newobj,
 							methodDefinition.Module.Import(References.DictionaryConstructor)), processor);
 
-					foreach (CustomAttributeNamedArgument property in attribute.Properties)
+					foreach (CustomAttributeNamedArgument property in attribute.Properties.Union(attribute.Fields))
 					{
 						returnInstruction.Previous
 							.AppendDup(processor)

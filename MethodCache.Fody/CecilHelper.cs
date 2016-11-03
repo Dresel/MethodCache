@@ -48,7 +48,7 @@
 			// System.Type
 			// An enum type, provided it has public accessibility and the types in which it is nested (if any) also have public accessibility (§17.2)
 			// Single-dimensional arrays of the above types
-			var argumentType = argument.Type;
+			TypeReference argumentType = argument.Type;
 
 			switch (argumentType.MetadataType)
 			{
@@ -72,7 +72,7 @@
 						.AppendLdcI4(processor, values.Length)
 						.Append(processor.Create(OpCodes.Newarr, argument.Type.GetElementType()), processor);
 
-					var arrayType = argument.Type.GetElementType();
+					TypeReference arrayType = argument.Type.GetElementType();
 
 					for (int i = 0; i < values.Length; i++)
 					{
@@ -330,19 +330,19 @@
 
 		public static MethodReference MakeHostInstanceGeneric(this MethodReference self, params TypeReference[] args)
 		{
-			var reference = new MethodReference(self.Name, self.ReturnType, self.DeclaringType.MakeGenericInstanceType(args))
+			MethodReference reference = new MethodReference(self.Name, self.ReturnType, self.DeclaringType.MakeGenericInstanceType(args))
 			{
 				HasThis = self.HasThis,
 				ExplicitThis = self.ExplicitThis,
 				CallingConvention = self.CallingConvention
 			};
 
-			foreach (var parameter in self.Parameters)
+			foreach (ParameterDefinition parameter in self.Parameters)
 			{
 				reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
 			}
 
-			foreach (var genericParam in self.GenericParameters)
+			foreach (GenericParameter genericParam in self.GenericParameters)
 			{
 				reference.GenericParameters.Add(new GenericParameter(genericParam.Name, reference));
 			}

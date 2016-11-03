@@ -34,7 +34,7 @@
 
 		public void LoadReferences()
 		{
-			var coreTypes = new List<TypeDefinition>();
+			List<TypeDefinition> coreTypes = new List<TypeDefinition>();
 
 			AppendTypes("System.Runtime.Extensions", coreTypes);
 			AppendTypes("System", coreTypes);
@@ -42,7 +42,7 @@
 			AppendTypes("System.Runtime", coreTypes);
 			AppendTypes("System.Reflection", coreTypes);
 
-			var debugType = GetDebugType(coreTypes);
+			TypeDefinition debugType = GetDebugType(coreTypes);
 
 			DebugWriteLineMethod =
 				debugType.Methods.First(
@@ -90,7 +90,7 @@
 
 		private void AppendTypes(string name, List<TypeDefinition> coreTypes)
 		{
-			var definition = AssemblyResolver.Resolve(name);
+			AssemblyDefinition definition = AssemblyResolver.Resolve(name);
 			if (definition != null)
 			{
 				coreTypes.AddRange(definition.MainModule.Types);
@@ -99,14 +99,14 @@
 
 		private TypeDefinition GetDebugType(List<TypeDefinition> coreTypes)
 		{
-			var debugType = coreTypes.FirstOrDefault(x => x.Name == "Debug");
+			TypeDefinition debugType = coreTypes.FirstOrDefault(x => x.Name == "Debug");
 
 			if (debugType != null)
 			{
 				return debugType;
 			}
 
-			var systemDiagnosticsDebug = AssemblyResolver.Resolve("System.Diagnostics.Debug");
+			AssemblyDefinition systemDiagnosticsDebug = AssemblyResolver.Resolve("System.Diagnostics.Debug");
 
 			if (systemDiagnosticsDebug != null)
 			{
@@ -123,7 +123,7 @@
 
 		private TypeDefinition GetDictionaryInterface(List<TypeDefinition> coreTypes)
 		{
-			var dictionaryType = coreTypes.FirstOrDefault(x => x.Name == "IDictionary`2");
+			TypeDefinition dictionaryType = coreTypes.FirstOrDefault(x => x.Name == "IDictionary`2");
 
 			if (dictionaryType != null)
 			{
@@ -135,7 +135,7 @@
 
 		private TypeDefinition GetDictionaryType(List<TypeDefinition> coreTypes)
 		{
-			var dictionaryType = coreTypes.FirstOrDefault(x => x.Name == "Dictionary`2");
+			TypeDefinition dictionaryType = coreTypes.FirstOrDefault(x => x.Name == "Dictionary`2");
 
 			if (dictionaryType != null)
 			{
@@ -147,7 +147,7 @@
 
 		private TypeDefinition GetSystemRuntimeTypeHandleType(List<TypeDefinition> coreTypes)
 		{
-			var runtimeTypeHandle = coreTypes.FirstOrDefault(x => x.Name == "RuntimeTypeHandle");
+			TypeDefinition runtimeTypeHandle = coreTypes.FirstOrDefault(x => x.Name == "RuntimeTypeHandle");
 
 			if (runtimeTypeHandle != null)
 			{
@@ -159,7 +159,7 @@
 
 		private TypeDefinition GetSystemTypeType(List<TypeDefinition> coreTypes)
 		{
-			var systemType = coreTypes.FirstOrDefault(x => x.Name == "Type");
+			TypeDefinition systemType = coreTypes.FirstOrDefault(x => x.Name == "Type");
 
 			if (systemType != null)
 			{
