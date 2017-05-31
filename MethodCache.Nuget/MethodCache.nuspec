@@ -1,31 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-    <metadata>
-        <id>MethodCache.Fody</id>
-        <version>1.5.1-alpha1</version>
-        <title>MethodCache.Fody</title>
-        <authors>Christopher Dresel</authors>
-        <owners>Christopher Dresel</owners>
-        <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
-        <projectUrl>http://github.com/Dresel/MethodCache</projectUrl>
-        <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>A method and property caching Fody addin.</description>
-        <summary />
-        <language>en-US</language>
-        <tags>ILWeaving, Fody, Cecil, Caching</tags>
-        <dependencies>
-            <dependency id="Fody" />
-        </dependencies>
-    </metadata>
-    <files>
+	<metadata>
+		<id>MethodCache.Fody</id>
+		<version>1.5.1</version>
+		<title>MethodCache.Fody</title>
+		<authors>Christopher Dresel</authors>
+		<owners>Christopher Dresel</owners>
+		<licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+		<projectUrl>http://github.com/Dresel/MethodCache</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>A method and property caching Fody addin.</description>
+		<summary />
+		<language>en-US</language>
+		<tags>ILWeaving, Fody, Cecil, Caching</tags>
+		<dependencies>
+			<dependency id="Fody" />
+		</dependencies>
+	</metadata>
+	<files>
 		<file src="input\lib\MethodCache.Attributes.dll" target="lib\net20\MethodCache.Attributes.dll" />
 		<file src="input\lib\MethodCache.Attributes.dll" target="lib\net35\MethodCache.Attributes.dll" />
 		<file src="input\lib\MethodCache.Attributes.dll" target="lib\net40\MethodCache.Attributes.dll" />
 		<file src="input\lib\MethodCache.Attributes.dll" target="lib\dotnet\MethodCache.Attributes.dll" />
 		<file src="input\lib\MethodCache.Attributes.dll" target="lib\portable-net4+sl4+wp8+win8+wpa81+MonoAndroid16+MonoTouch40\MethodCache.Attributes.dll" />
-        <file src="tools\install.ps1" target="tools\install.ps1" />
-        <file src="tools\uninstall.ps1" target="tools\uninstall.ps1" />
-        <file src="readme.txt" target="" />
-        <file src="input\lib\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
-    </files>
+		<file src="tools\install.ps1" target="tools\install.ps1" />
+		<file src="tools\uninstall.ps1" target="tools\uninstall.ps1" />
+		<file src="readme.txt" target="" />
+		<file src="input\lib\MethodCache.Fody.dll" target="MethodCache.Fody.dll" />
+	</files>
 </package>
