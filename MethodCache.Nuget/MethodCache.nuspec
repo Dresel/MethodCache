@@ -14,7 +14,7 @@
 		<language>en-US</language>
 		<tags>ILWeaving, Fody, Cecil, Caching</tags>
 		<dependencies>
-			<dependency id="Fody" />
+			<dependency id="Fody" version="(,2.0)" />
 		</dependencies>
 	</metadata>
 	<files>
