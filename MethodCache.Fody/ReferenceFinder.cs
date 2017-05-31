@@ -90,7 +90,7 @@
 
 		private void AppendTypes(string name, List<TypeDefinition> coreTypes)
 		{
-			AssemblyDefinition definition = AssemblyResolver.Resolve(name);
+			AssemblyDefinition definition = AssemblyResolver.Resolve(AssemblyNameReference.Parse(name));
 			if (definition != null)
 			{
 				coreTypes.AddRange(definition.MainModule.Types);
@@ -106,7 +106,7 @@
 				return debugType;
 			}
 
-			AssemblyDefinition systemDiagnosticsDebug = AssemblyResolver.Resolve("System.Diagnostics.Debug");
+			AssemblyDefinition systemDiagnosticsDebug = AssemblyResolver.Resolve(AssemblyNameReference.Parse("System.Diagnostics.Debug"));
 
 			if (systemDiagnosticsDebug != null)
 			{

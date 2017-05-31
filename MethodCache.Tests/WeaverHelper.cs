@@ -45,26 +45,28 @@
 			string newAssembly = assemblyPath.Replace(".dll", string.Format("{0}.dll", suffix));
 			File.Copy(assemblyPath, newAssembly, true);
 
-			ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(newAssembly);
-			ModuleWeaver weavingTask = new ModuleWeaver { ModuleDefinition = moduleDefinition };
-
-			weavingTask.AssemblyResolver = new AssemblyResolverMock();
-
-			weavingTask.LogInfo = (message) => Debug.WriteLine(message);
-			weavingTask.LogWarning = (message) => Debug.WriteLine(message);
-			weavingTask.LogError = (message) => new Exception(message);
-
-			if (config != null)
+			using (ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(assemblyPath))
 			{
-				weavingTask.Config = config;
-			}
+				ModuleWeaver weavingTask = new ModuleWeaver { ModuleDefinition = moduleDefinition };
+
+				weavingTask.AssemblyResolver = new AssemblyResolverMock();
+
+				weavingTask.LogInfo = (message) => Debug.WriteLine(message);
+				weavingTask.LogWarning = (message) => Debug.WriteLine(message);
+				weavingTask.LogError = (message) => new Exception(message);
+
+				if (config != null)
+				{
+					weavingTask.Config = config;
+				}
 
 #if (DEBUG)
-			weavingTask.DefineConstants.Add("DEBUG");
+				weavingTask.DefineConstants.Add("DEBUG");
 #endif
 
-			weavingTask.Execute();
-			moduleDefinition.Write(newAssembly);
+				weavingTask.Execute();
+				moduleDefinition.Write(newAssembly);
+			}
 
 			return Assembly.LoadFile(newAssembly);
 		}
