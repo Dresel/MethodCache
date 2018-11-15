@@ -32,9 +32,8 @@
 
 		public static Assembly WeaveAssembly(string suffix, XElement config)
 		{
-			string projectPath =
-				Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
-					@"..\..\..\MethodCache.Tests.TestAssembly\MethodCache.Tests.TestAssembly.csproj"));
+			string projectPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
+				@"..\..\..\MethodCache.Tests.TestAssembly\MethodCache.Tests.TestAssembly.csproj"));
 			string assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath),
 				@"bin\Debug\MethodCache.Tests.TestAssembly.dll");
 
@@ -45,9 +44,18 @@
 			string newAssembly = assemblyPath.Replace(".dll", string.Format("{0}.dll", suffix));
 			File.Copy(assemblyPath, newAssembly, true);
 
-			using (ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(assemblyPath))
+			DefaultAssemblyResolver defaultAssemblyResolver = new DefaultAssemblyResolver();
+			defaultAssemblyResolver.AddSearchDirectory(Path.GetDirectoryName(assemblyPath));
+
+			using (ModuleDefinition moduleDefinition = ModuleDefinition.ReadModule(assemblyPath, new ReaderParameters()
 			{
-				ModuleWeaver weavingTask = new ModuleWeaver { ModuleDefinition = moduleDefinition };
+				AssemblyResolver = defaultAssemblyResolver
+			}))
+			{
+				ModuleWeaver weavingTask = new ModuleWeaver
+				{
+					ModuleDefinition = moduleDefinition
+				};
 
 				weavingTask.AssemblyResolver = new AssemblyResolverMock();
 

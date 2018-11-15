@@ -107,7 +107,7 @@
 
 			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 
-			Assert.IsInstanceOfType(type, cache.ParametersPassedToLastStoreCall["ParameterEnum"]);
+			Assert.IsInstanceOf(type, cache.ParametersPassedToLastStoreCall["ParameterEnum"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterEnum"] ==
 				(Enum.GetValues(type)[0] | Enum.GetValues(type)[2]));
 		}
@@ -129,7 +129,7 @@
 			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 			dynamic typeArray = WeaverHelper.CreateType<EnumType[]>(Assembly);
 
-			Assert.IsInstanceOfType(typeArray, cache.ParametersPassedToLastStoreCall["ParameterEnumArray"]);
+			Assert.IsInstanceOf(typeArray, cache.ParametersPassedToLastStoreCall["ParameterEnumArray"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterEnumArray"][0] ==
 				(Enum.GetValues(type)[0] | Enum.GetValues(type)[2]));
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterEnumArray"][1] == Enum.GetValues(type)[1]);
@@ -204,7 +204,7 @@
 
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(object[]), cache.ParametersPassedToLastStoreCall["ParameterObjectArray"]);
+			Assert.IsInstanceOf(typeof(object[]), cache.ParametersPassedToLastStoreCall["ParameterObjectArray"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObjectArray"].Length == 5);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObjectArray"][0] == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObjectArray"][1] == "2");
@@ -227,7 +227,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(string[]), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
+			Assert.IsInstanceOf(typeof(string[]), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"].Length == 2);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"][0] == "1");
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"][1] == "2");
@@ -249,7 +249,7 @@
 
 			dynamic type = WeaverHelper.CreateType<EnumType>(Assembly);
 
-			Assert.IsInstanceOfType(type, cache.ParametersPassedToLastStoreCall["ParameterObject"]);
+			Assert.IsInstanceOf(type, cache.ParametersPassedToLastStoreCall["ParameterObject"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"] ==
 				(Enum.GetValues(type)[0] | Enum.GetValues(type)[2]));
 		}
@@ -267,7 +267,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(Type), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
+			Assert.IsInstanceOf(typeof(Type), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterObject"] == typeof(List<int>));
 		}
 
@@ -284,7 +284,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(bool), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
+			Assert.IsInstanceOf(typeof(bool), cache.ParametersPassedToLastStoreCall["ParameterObject"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterObject"] == true);
 		}
 
@@ -301,7 +301,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(string[]), cache.ParametersPassedToLastStoreCall["ParameterStringArray"]);
+			Assert.IsInstanceOf(typeof(string[]), cache.ParametersPassedToLastStoreCall["ParameterStringArray"]);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterStringArray"].Length == 2);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterStringArray"][0] == "1");
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall["ParameterStringArray"][1] == "2");
@@ -320,7 +320,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(Type), cache.ParametersPassedToLastStoreCall["ParameterType"]);
+			Assert.IsInstanceOf(typeof(Type), cache.ParametersPassedToLastStoreCall["ParameterType"]);
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterType"] == typeof(List<int>));
 		}
 
@@ -337,7 +337,7 @@
 			// Assert
 			Assert.IsTrue(cache.NumStoreParameterCalls == 1);
 			Assert.IsTrue(cache.ParametersPassedToLastStoreCall.Count == 1);
-			Assert.IsInstanceOfType(typeof(Type[]), cache.ParametersPassedToLastStoreCall["ParameterTypeArray"]);
+			Assert.IsInstanceOf(typeof(Type[]), cache.ParametersPassedToLastStoreCall["ParameterTypeArray"]);
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterTypeArray"][0] == typeof(List<int>));
 			Assert.IsTrue((Type)cache.ParametersPassedToLastStoreCall["ParameterTypeArray"][1] == typeof(List<string>));
 		}
