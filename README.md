@@ -1,3 +1,9 @@
+# Migrated to SpatialFocus.MethodCache
+
+We have made a complete rewrite of MethodCache that supports latest version of Fody . Please find the new version [here](https://github.com/SpatialFocus/MethodCache.Fody/).
+
+----
+
 ## This is an add-in for [Fody](https://github.com/Fody/Fody/) 
 
 Caches return values of methods and properties decorated with a `[Cache]` Attribute.
